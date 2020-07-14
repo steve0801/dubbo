@@ -33,6 +33,7 @@ public class ConsumerContextClusterInterceptor implements ClusterInterceptor, Cl
                 .setInvocation(invocation)
                 .setLocalAddress(NetUtils.getLocalHost(), 0);
         if (invocation instanceof RpcInvocation) {
+            // 运行
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
         RpcContext.removeServerContext();

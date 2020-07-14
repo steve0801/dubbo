@@ -89,6 +89,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
                     }
                     int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);
                     if (uptime > 0 && uptime < warmup) {
+                        // 计算权重
                         weight = calculateWarmupWeight((int)uptime, warmup, weight);
                     }
                 }

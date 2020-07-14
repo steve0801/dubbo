@@ -37,6 +37,7 @@ import static org.apache.dubbo.common.constants.RegistryConstants.DYNAMIC_CONFIG
 
 /**
  * Config parser
+ * 工具类
  */
 public class ConfigParser {
 
