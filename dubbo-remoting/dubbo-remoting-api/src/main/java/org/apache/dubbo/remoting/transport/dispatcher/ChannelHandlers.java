@@ -30,6 +30,7 @@ public class ChannelHandlers {
     }
 
     public static ChannelHandler wrap(ChannelHandler handler, URL url) {
+        // todo 加载 了 具体 的 线程 模型，
         return ChannelHandlers.getInstance().wrapInternal(handler, url);
     }
 
@@ -41,6 +42,7 @@ public class ChannelHandlers {
         INSTANCE = instance;
     }
 
+    // todo 加载 了 具体 的 线程 模型，
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
         return new MultiMessageHandler(new HeartbeatHandler(url.getOrDefaultFrameworkModel().getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url)));

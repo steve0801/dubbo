@@ -45,8 +45,10 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
     protected final ThreadPoolExecutor connectionExecutor;
     private final int queuewarninglimit;
 
+    // 构造方法
     public ConnectionOrderedChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
+        // todo 创建线程池
         String threadName = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
         connectionExecutor = new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
@@ -54,9 +56,18 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
                 new NamedThreadFactory(threadName, true),
                 new AbortPolicyWithReport(threadName, url)
         );  // FIXME There's no place to release connectionExecutor!
+
+        // todo 线程池队列元素限制警告
         queuewarninglimit = url.getParameter(CONNECT_QUEUE_WARNING_SIZE, DEFAULT_CONNECT_QUEUE_WARNING_SIZE);
     }
 
+    // todo 链接建立事件
+    // todo 先使 用 代码 9 检查 线程 池 队列 的 元素 个数，
+    //  个数 超过 阈值 则 打印 日志， 然后 把 事件 放入 线程 池 队列，
+    //  并使 用 单线 程 进行 处理。 由于 是 单线 程 处理，
+    //  所以 其实 是“ 多 生产- 单 消费” 模型，
+    //  实现 了 把 链接 建立、 链接 断开 事件 的 处理 变为 顺序 化 处理。
+    //
     @Override
     public void connected(Channel channel) throws RemotingException {
         try {
@@ -67,6 +78,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // todo 链接断开事件
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         try {
@@ -77,6 +89,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // todo 请求响应事件
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getPreferredExecutorService(message);
@@ -91,6 +104,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // todo 异常事件
     @Override
     public void caught(Channel channel, Throwable exception) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -101,6 +115,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // todo 检查线程池队列元素个数
     private void checkQueueLength() {
         if (connectionExecutor.getQueue().size() > queuewarninglimit) {
             logger.warn(new IllegalThreadStateException("connectionordered channel handler `queue size: " + connectionExecutor.getQueue().size() + " exceed the warning limit number :" + queuewarninglimit));

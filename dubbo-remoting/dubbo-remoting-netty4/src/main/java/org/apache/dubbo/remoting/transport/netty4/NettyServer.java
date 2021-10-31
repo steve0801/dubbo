@@ -79,6 +79,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
     private EventLoopGroup workerGroup;
     private final int serverShutdownTimeoutMills;
 
+    // todo 会 启动 NettyServer 来 监听 消费 方 的 链接，
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
         // you can customize name and type of client thread pool by THREAD_NAME_KEY and THREADPOOL_KEY in CommonConstants.
         // the handler will be wrapped: MultiMessageHandler->HeartbeatHandler->handler

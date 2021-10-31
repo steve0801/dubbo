@@ -31,10 +31,12 @@ import java.util.concurrent.RejectedExecutionException;
 
 public class MessageOnlyChannelHandler extends WrappedChannelHandler {
 
+    // todo 线程模型名称
     public MessageOnlyChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
     }
 
+    // todo 拓展接口具体实现
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getPreferredExecutorService(message);

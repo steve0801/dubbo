@@ -36,6 +36,7 @@ public class FakeChannelHandlers extends ChannelHandlers {
         ChannelHandlers.setTestingChannelHandlers(new ChannelHandlers());
     }
 
+    // todo 加载 了 具体 的 线程 模型，
     @Override
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
         return ExtensionLoader.getExtensionLoader(Dispatcher.class)

@@ -25,8 +25,10 @@ import org.apache.dubbo.remoting.Dispatcher;
  */
 public class DirectDispatcher implements Dispatcher {
 
+    // todo 线程模型名称
     public static final String NAME = "direct";
 
+    // TODO 拓展接口
     @Override
     public ChannelHandler dispatch(ChannelHandler handler, URL url) {
         return new DirectChannelHandler(handler, url);
