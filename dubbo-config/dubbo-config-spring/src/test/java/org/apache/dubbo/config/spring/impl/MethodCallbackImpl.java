@@ -43,6 +43,7 @@ public class MethodCallbackImpl implements MethodCallback {
 
     public static AtomicInteger cnt = new AtomicInteger();
 
+    // TODO 初始化
     @PostConstruct
     protected void init() {
         checkInjection();

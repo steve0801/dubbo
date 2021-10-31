@@ -109,6 +109,7 @@ import static org.apache.dubbo.common.utils.StringUtils.isBlank;
  * @see java.net.URL
  * @see java.net.URI
  */
+// TODO 减少了URL.getAddress的对象分配
 public /*final**/
 class URL implements Serializable {
 

@@ -60,6 +60,7 @@ public class PageServlet extends HttpServlet {
         return Collections.unmodifiableList(menus);
     }
 
+    // TODO 初始化
     @Override
     public void init() throws ServletException {
         super.init();

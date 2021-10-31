@@ -143,6 +143,9 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 //                if (RpcUtils.isGenericCall(path, getMethodName()) || RpcUtils.isEcho(path, getMethodName())) {
 //                    pts = ReflectUtils.desc2classArray(desc);
 //                } else {
+                // TODO
+                //  解码时：当provider端对请求进行解码时，会解析需要调用的方法签名，包括方法的参数类型、返回类型，
+                //  现在这些内容都已经做了缓存，所以无需再重新解析，只要直接从ServiceRepository中获取即可
                 FrameworkServiceRepository repository = frameworkModel.getServiceRepository();
                 List<ProviderModel> providerModels = repository.lookupExportedServicesWithoutGroup(keyWithoutGroup(path, version));
                 ServiceDescriptor serviceDescriptor = null;

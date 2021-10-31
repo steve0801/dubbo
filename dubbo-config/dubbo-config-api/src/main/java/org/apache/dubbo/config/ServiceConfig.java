@@ -198,6 +198,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     /**
      * for early init serviceMetadata
      */
+    // TODO 初始化
+    //  加载服务元数据的逻辑
     public void init() {
         if (this.initialized.compareAndSet(false, true)) {
             // load ServiceListeners from extension

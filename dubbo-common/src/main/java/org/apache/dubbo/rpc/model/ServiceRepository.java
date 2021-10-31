@@ -24,6 +24,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+// TODO
+//  将version、group、服务类型、服务接口名等元数据放入ServiceRepository对象中
+//  服务仓库，它封装了服务相关的元数据、consumer端的元数据模型ConsumerModel以及
+//  provider端的元数据模型ProviderModel
 public class ServiceRepository {
 
     public static final String NAME = "repository";

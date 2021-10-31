@@ -80,6 +80,7 @@ public class DubboConfigBeanInitializer implements BeanFactoryAware, Initializin
         init();
     }
 
+    // TODO 初始化
     private void init() {
         if (initialized.compareAndSet(false, true)) {
             referenceBeanManager = beanFactory.getBean(ReferenceBeanManager.BEAN_NAME, ReferenceBeanManager.class);

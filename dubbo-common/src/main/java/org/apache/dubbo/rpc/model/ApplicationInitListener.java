@@ -24,5 +24,6 @@ public interface ApplicationInitListener {
     /**
      * init the application
      */
+    // TODO 初始化
     void init();
 }

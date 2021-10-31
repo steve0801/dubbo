@@ -1018,6 +1018,7 @@ public class ExtensionLoader<T> {
         return false;
     }
 
+    // TODO 判断是否在排除列表中
     private boolean isExcludedByClassLoader(String className, ClassLoader classLoader, String... onlyExtensionClassLoaderPackages) {
         if (onlyExtensionClassLoaderPackages != null) {
             for (String excludePackage : onlyExtensionClassLoaderPackages) {

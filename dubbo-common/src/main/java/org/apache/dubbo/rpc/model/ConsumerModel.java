@@ -33,6 +33,8 @@ import java.util.TreeSet;
 /**
  * This model is bound to your reference's configuration, for example, group, version or method level configuration.
  */
+// TODO 封装了referenceConfig、methodConfig等
+//  封装了consumer端和provider端的配置
 public class ConsumerModel extends ServiceModel {
     private final Set<String> apps = new TreeSet<>();
 

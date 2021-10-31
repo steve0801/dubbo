@@ -31,6 +31,8 @@ import java.util.Objects;
 /**
  * ProviderModel is about published services
  */
+// TODO
+//   封装了provider端的配置
 public class ProviderModel extends ServiceModel {
     private final List<RegisterStatedURL> urls;
     private final Map<String, List<ProviderMethodModel>> methods = new HashMap<String, List<ProviderMethodModel>>();

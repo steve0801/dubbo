@@ -181,6 +181,13 @@ public class RpcInvocation implements Invocation, Serializable {
         initParameterDesc();
     }
 
+    // TODO 无论是consumer端的调用链路中还是provider端的调用链路中，
+    //  RpcInvocation一直都是整个调用链路内携带元数据的载体，
+    //  举个例子：
+    //  可以看源码中RpcInvocation有一个方法initParameterDesc()，
+    //  这其中是赋值parameterDesc、compatibleParamSignatures、returnTypes这三个属性，
+    //  但是这三个数据都是直接从ServiceRepository中直接获取的，
+    //  并不是在初始化RpcInvocation时再计算这三个值。
     private void initParameterDesc() {
         AtomicReference<ServiceDescriptor> serviceDescriptor = new AtomicReference<>();
         if (serviceModel != null) {

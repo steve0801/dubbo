@@ -188,6 +188,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         if (beanDefinition instanceof AnnotatedBeanDefinition) {
             AnnotatedBeanDefinition annotatedBeanDefinition = (AnnotatedBeanDefinition) beanDefinition;
             String beanClassName = SpringCompatUtils.getFactoryMethodReturnType(annotatedBeanDefinition);
+            // TODO 防止空指针异常？
             if (beanClassName != null && ReferenceBean.class.getName().equals(beanClassName)) {
                 return true;
             }

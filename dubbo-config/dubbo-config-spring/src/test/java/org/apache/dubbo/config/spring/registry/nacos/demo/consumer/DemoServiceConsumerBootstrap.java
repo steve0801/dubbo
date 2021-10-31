@@ -37,6 +37,7 @@ public class DemoServiceConsumerBootstrap {
     @Reference(version = "${demo.service.version}")
     private DemoService demoService;
 
+    // TODO 初始化
     @PostConstruct
     public void init() throws InterruptedException {
         for (int j = 0; j < 10; j++) {

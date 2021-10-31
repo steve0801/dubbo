@@ -97,6 +97,11 @@ public class URLAddress implements Serializable {
         return new URLAddress(host, port, rawAddress);
     }
 
+    // TODO 在URL中新增了address这个属性，在获取address时只做一次对象分配，
+    //  而不需要像原来每次调用getAddress方法时都做一些字符串拼接，
+    //  由于拼接的host和port都是一个String类型的对象，所以在拼接的时候并不会被在编译期间就优化，
+    //  而是会创建一个StringBuilder对象来进行拼接，
+    //  这样每次获取address就会带来对象的内存分配的性能损耗。
     public String getAddress() {
         if (rawAddress == null) {
             rawAddress = getAddress(getHost(), getPort());

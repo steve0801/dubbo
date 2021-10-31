@@ -46,6 +46,7 @@ public class SerializeClassChecker {
 
     private final AtomicLong counter = new AtomicLong(0);
 
+    // TODO 序列化检查
     private SerializeClassChecker() {
         String blockAllClassExceptAllow = System.getProperty(CLASS_DESERIALIZE_BLOCK_ALL, "false");
         BLOCK_ALL_CLASS_EXCEPT_ALLOW = Boolean.parseBoolean(blockAllClassExceptAllow);
@@ -106,6 +107,7 @@ public class SerializeClassChecker {
 
     /**
      * Check if a class is in block list, using prefix match
+     * TODO ？
      *
      * @throws IllegalArgumentException if class is blocked
      * @param name class name ( all are convert to lower case )
@@ -127,6 +129,7 @@ public class SerializeClassChecker {
             }
         }
 
+        // TODO 前缀？
         for (String blockedPrefix : CLASS_DESERIALIZE_BLOCKED_SET) {
             if (BLOCK_ALL_CLASS_EXCEPT_ALLOW || name.startsWith(blockedPrefix)) {
                 CLASS_BLOCK_LFU_CACHE.put(name, CACHE);

@@ -205,6 +205,7 @@ public class MultipleRegistry extends AbstractRegistry {
         return urls.stream().distinct().collect(Collectors.toList());
     }
 
+    // TODO 初始化
     protected void init() {
     }
 

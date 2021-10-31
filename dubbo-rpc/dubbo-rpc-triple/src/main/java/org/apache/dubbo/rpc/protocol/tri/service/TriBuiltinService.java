@@ -67,6 +67,7 @@ public class TriBuiltinService {
         init();
     }
 
+    // TODO 初始化
     public void init() {
         if (init.compareAndSet(false, true)) {
             ServiceDescriptor serviceDescriptor = repository.registerService(Health.class);

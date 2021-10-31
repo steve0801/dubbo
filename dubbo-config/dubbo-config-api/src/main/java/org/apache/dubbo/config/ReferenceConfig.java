@@ -229,6 +229,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         getScopeModel().getConfigManager().removeConfig(this);
     }
 
+    // TODO 初始化
     protected synchronized void init() {
         if (initialized) {
             return;

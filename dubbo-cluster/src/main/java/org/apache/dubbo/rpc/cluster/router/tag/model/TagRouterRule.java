@@ -62,6 +62,7 @@ public class TagRouterRule extends AbstractRouterRule {
         return tagRouterRule;
     }
 
+    // TODO 初始化
     public void init() {
         if (!isValid()) {
             return;

@@ -229,6 +229,8 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
             return null;
         }
 
+        // TODO 不再使用
+        @Deprecated
         @Override
         public void reset(Parameters parameters) {
 

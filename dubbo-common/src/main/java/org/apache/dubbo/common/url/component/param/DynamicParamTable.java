@@ -74,6 +74,7 @@ public final class DynamicParamTable {
         return VALUES.get(vi).defaultVal();
     }
 
+    // TODO 初始化
     private static void init() {
         List<String> keys = new LinkedList<>();
         List<ParamValue> values = new LinkedList<>();

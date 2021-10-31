@@ -41,6 +41,7 @@ import org.w3c.dom.Element;
 
 /**
  * DubboNamespaceHandler
+ * TODO 供回调？
  *
  * @export
  */
@@ -50,6 +51,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
         Version.checkDuplicate(DubboNamespaceHandler.class);
     }
 
+    // TODO 初始化
     @Override
     public void init() {
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class));
