@@ -49,6 +49,10 @@ import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 /**
  * GenericImplInvokerFilter
  */
+// TODO
+//  调用链
+//  ApiGenericConsumer -> provxy0 -> InvokerInvocationHandler -> MockClusterInvoker ->
+//  FailoverClusterInvoker -> ProtocalFilterWrapper -> GemericImplFilter -> DubboInvoker
 @Activate(group = CommonConstants.CONSUMER, value = GENERIC_KEY, order = 20000)
 public class GenericImplFilter implements Filter, Filter.Listener {
 
@@ -103,7 +107,9 @@ public class GenericImplFilter implements Filter, Filter.Listener {
         // making a generic call to a normal service
         else if (isMakingGenericCall(generic, invocation)) {
 
+            // 获取泛化参数
             Object[] args = (Object[]) invocation.getArguments()[2];
+            // TODO 如果是native java方法
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
 
                 for (Object arg : args) {
@@ -111,6 +117,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                         error(generic, byte[].class.getName(), arg.getClass().getName());
                     }
                 }
+                // TODO 如果是bean方法
             } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 for (Object arg : args) {
                     if (!(arg instanceof JavaBeanDescriptor)) {
@@ -119,9 +126,11 @@ public class GenericImplFilter implements Filter, Filter.Listener {
                 }
             }
 
+            // TODO 设置泛化调用方式，以便服务方使用
             invocation.setAttachment(
                     GENERIC_KEY, invoker.getUrl().getParameter(GENERIC_KEY));
         }
+        // TODO 发起远程调用
         return invoker.invoke(invocation);
     }
 
@@ -220,6 +229,7 @@ public class GenericImplFilter implements Filter, Filter.Listener {
     }
 
     private boolean isMakingGenericCall(String generic, Invocation invocation) {
+        // TODO 判断是否为泛化调用
         return (invocation.getMethodName().equals($INVOKE) || invocation.getMethodName().equals($INVOKE_ASYNC))
                 && invocation.getArguments() != null
                 && invocation.getArguments().length == 3

@@ -75,16 +75,19 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
         this.applicationModel = applicationModel;
     }
 
+    // TODO 判断是否为泛化请求
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
                 && inv.getArguments() != null
                 && inv.getArguments().length == 3
                 && !GenericService.class.isAssignableFrom(invoker.getInterface())) {
+            // TODO 获取参数名称、类型、参数值
             String name = ((String) inv.getArguments()[0]).trim();
             String[] types = (String[]) inv.getArguments()[1];
             Object[] args = (Object[]) inv.getArguments()[2];
             try {
+                // TODO 使用反射获取调用方法
                 Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
                 Class<?>[] params = method.getParameterTypes();
                 if (args == null) {
@@ -99,12 +102,14 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                     throw new RpcException("GenericFilter#invoke args.length != types.length, please check your "
                             + "params");
                 }
+                // TODO 获取泛化使用方使用的泛化类型
                 String generic = inv.getAttachment(GENERIC_KEY);
 
                 if (StringUtils.isBlank(generic)) {
                     generic = RpcContext.getClientAttachment().getAttachment(GENERIC_KEY);
                 }
 
+                // TODO 泛化类型为空，则使用generic=true的泛化方式
                 if (StringUtils.isEmpty(generic)
                         || ProtocolUtils.isDefaultGenericSerialization(generic)
                         || ProtocolUtils.isGenericReturnRawResult(generic)) {
@@ -113,6 +118,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                     } catch (IllegalArgumentException e) {
                         throw new RpcException(e);
                     }
+                    // TODO generic=nativejava 的泛化方式
                 } else if (ProtocolUtils.isGsonGenericSerialization(generic)) {
                     args = getGsonGenericArgs(args, method.getGenericParameterTypes());
                 } else if (ProtocolUtils.isJavaGenericSerialization(generic)) {
@@ -147,6 +153,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                                             args[i].getClass());
                         }
                     }
+                    // TODO Generic=bean的方式
                 } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                     for (int i = 0; i < args.length; i++) {
                         if (args[i] instanceof JavaBeanDescriptor) {
@@ -183,6 +190,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                     }
                 }
 
+                // TODO 请求传递到filter链的下一个filter，最后执行具体服务
                 RpcInvocation rpcInvocation =
                         new RpcInvocation(invoker.getUrl().getServiceModel(), method, invoker.getInterface().getName(), invoker.getUrl().getProtocolServiceKey(), args,
                                 inv.getObjectAttachments(), inv.getAttributes());
@@ -194,6 +202,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                 throw new RpcException(e.getMessage(), e);
             }
         }
+        // TODO 如果不是泛型调用，则直接把请求传播下去
         return invoker.invoke(inv);
     }
 
@@ -235,6 +244,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                 }
                 appResponse.setException(appException);
             }
+            // TODO 如果泛化类型为nativejava，则使用java序列化方式对结果进行序列化处理
             if (ProtocolUtils.isJavaGenericSerialization(generic)) {
                 try {
                     UnsafeByteArrayOutputStream os = new UnsafeByteArrayOutputStream(512);
@@ -247,6 +257,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
                                     GENERIC_SERIALIZATION_NATIVE_JAVA +
                                     "] serialize result failed.", e);
                 }
+                // TODO 如果类型为bean，使用bean序列化方式，对结果进行序列化
             } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
                 appResponse.setValue(JavaBeanSerializeUtil.serialize(appResponse.getValue(), JavaBeanAccessor.METHOD));
             } else if (ProtocolUtils.isProtobufGenericSerialization(generic)) {
@@ -264,6 +275,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
             } else if(ProtocolUtils.isGenericReturnRawResult(generic)) {
                 return;
             } else {
+                // TODO 如果泛化类为true，则使用POJO序列化方式，进行序列化操作
                 appResponse.setValue(PojoUtils.generalize(appResponse.getValue()));
             }
         }
