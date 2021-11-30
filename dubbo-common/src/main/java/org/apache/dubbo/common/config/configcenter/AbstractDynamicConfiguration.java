@@ -235,6 +235,7 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
     protected ThreadPoolExecutor initWorkersThreadPool(String threadPoolPrefixName,
                                                        int threadPoolSize,
                                                        long keepAliveTime) {
+        // TODO 用JUC包的ThreadPoolExecutor
         return new ThreadPoolExecutor(threadPoolSize, threadPoolSize, keepAliveTime,
                 TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory(threadPoolPrefixName, true));
     }

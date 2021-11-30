@@ -47,13 +47,20 @@ public class CachedThreadPool implements ThreadPool {
 
     @Override
     public Executor getExecutor(URL url) {
+        // TODO 获取线程名称
         String name = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
         int cores = url.getParameter(CORE_THREADS_KEY, DEFAULT_CORE_THREADS);
+        // TODO 线程数
         int threads = url.getParameter(THREADS_KEY, Integer.MAX_VALUE);
+        // TODO 线程池队列大小
         int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES);
         int alive = url.getParameter(ALIVE_KEY, DEFAULT_ALIVE);
         return new ThreadPoolExecutor(cores, threads, alive, TimeUnit.MILLISECONDS,
-                queues == 0 ? new SynchronousQueue<Runnable>() :
+            // TODO
+            //  另外， 当 队列 元素 为 0 时， 阻塞 队列 使 用的 是 SynchronousQueue；
+            //  当 队列 元素 小于 0 时， 使 用的 是 无 界 阻塞 队列 LinkedBlockingQueue；
+            //  当 队列 元素 大于 0 时， 使用 的 是有 界 的 LinkedBlockingQueue。
+            queues == 0 ? new SynchronousQueue<Runnable>() :
                         (queues < 0 ? new LinkedBlockingQueue<Runnable>()
                                 : new LinkedBlockingQueue<Runnable>(queues)),
                 new NamedInternalThreadFactory(name, true), new AbortPolicyWithReport(name, url));

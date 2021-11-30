@@ -619,6 +619,7 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         return getParameter(url, CONFIG_CENTER_ENCODING_PARAM_NAME, DEFAULT_CONFIG_CENTER_ENCODING);
     }
 
+    // TODO 用JUC包的ThreadPoolExecutor
     private static ThreadPoolExecutor newWatchEventsLoopThreadPool() {
         return new ThreadPoolExecutor(THREAD_POOL_SIZE, THREAD_POOL_SIZE,
                 0L, MILLISECONDS,
