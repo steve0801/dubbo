@@ -59,28 +59,41 @@ class ChannelWrappedInvoker<T> extends AbstractInvoker<T> {
         this.currentClient = new HeaderExchangeClient(new ChannelWrapper(this.channel), false);
     }
 
+    /**
+     * 执行远程过程调用（RPC）请求的核心方法
+     *
+     * @param invocation 包含调用方法、参数等信息的调用对象
+     * @return Result 异步调用结果，包含正常响应或异常信息
+     * @throws Throwable 可能抛出的底层异常（经过包装处理）
+     */
     @Override
     protected Result doInvoke(Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
-        // use interface's name as service path to export if it's not found on client side
+        // 设置服务路径和回调服务标识：当客户端找不到服务路径时，使用接口名称作为服务路径
         inv.setAttachment(PATH_KEY, getInterface().getName());
         inv.setAttachment(CALLBACK_SERVICE_KEY, serviceKey);
 
         try {
-            if (RpcUtils.isOneway(getUrl(), inv)) { // may have concurrency issue
+            // 处理单向调用和双向调用两种模式
+            if (RpcUtils.isOneway(getUrl(), inv)) { // 可能存在的并发场景处理
+                // 单向调用：发送请求后立即返回空结果
                 currentClient.send(inv, getUrl().getMethodParameter(invocation.getMethodName(), SENT_KEY, false));
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             } else {
+                // 双向调用：发送请求并等待响应结果
                 CompletableFuture<AppResponse> appResponseFuture = currentClient.request(inv).thenApply(obj -> (AppResponse) obj);
                 return new AsyncRpcResult(appResponseFuture, inv);
             }
         } catch (RpcException e) {
-            throw e;
+            throw e; // 直接抛出已识别的RPC异常
         } catch (TimeoutException e) {
+            // 超时异常包装为RPC_TIMEOUT异常
             throw new RpcException(RpcException.TIMEOUT_EXCEPTION, e.getMessage(), e);
         } catch (RemotingException e) {
+            // 网络异常包装为RPC_NETWORK异常
             throw new RpcException(RpcException.NETWORK_EXCEPTION, e.getMessage(), e);
-        } catch (Throwable e) { // here is non-biz exception, wrap it.
+        } catch (Throwable e) {
+            // 其他未预期的异常统一包装为通用RPC异常
             throw new RpcException(e.getMessage(), e);
         }
     }

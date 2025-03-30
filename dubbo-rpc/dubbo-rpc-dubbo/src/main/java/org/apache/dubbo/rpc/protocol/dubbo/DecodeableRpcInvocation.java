@@ -56,6 +56,42 @@ import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_ID_KEY;
 import static org.apache.dubbo.rpc.Constants.SERIALIZATION_SECURITY_CHECK_KEY;
 
+/**
+ * 这段Java代码定义了一个名为`DecodeableRpcInvocation`的类，该类继承自`RpcInvocation`并实现了`Codec`和`Decodeable`接口。这个类主要用于在Dubbo框架中对RPC调用进行解码操作。下面是对这段代码的详细解释：
+ *
+ * 1. **导入包**：
+ *    - 代码开始处导入了多个包，这些包包含了日志、序列化、断言、工具类、通道、编解码器等相关的类和接口。
+ *
+ * 2. **类声明**：
+ *    - `DecodeableRpcInvocation`类继承自`RpcInvocation`，并且实现了`Codec`和`Decodeable`接口。
+ *    - 类中定义了一些成员变量，如`Logger`用于日志记录，`Channel`表示通信通道，`byte`类型的`serializationType`表示序列化类型，`InputStream`用于输入流，`Request`表示请求对象，`boolean hasDecoded`表示是否已经解码，`FrameworkModel frameworkModel`表示框架模型，`CallbackServiceCodec callbackServiceCodec`用于回调服务编解码。
+ *
+ * 3. **构造方法**：
+ *    - 构造方法接受`FrameworkModel`、`Channel`、`Request`、`InputStream`和`byte id`作为参数。
+ *    - 在构造方法中，通过`Assert.notNull`方法确保传入的参数不为空，并初始化相应的成员变量。
+ *
+ * 4. **decode方法**：
+ *    - `decode`方法实现了`Decodeable`接口中的`decode`方法。
+ *    - 该方法首先检查`hasDecoded`标志，如果未解码且通道和输入流不为空，则调用私有方法`decode`进行解码操作。
+ *    - 如果解码过程中发生异常，会记录警告日志并将请求标记为损坏，同时设置请求数据为异常信息。
+ *    - 最后，将`hasDecoded`标志设置为`true`，表示已经完成解码。
+ *
+ * 5. **encode方法**：
+ *    - `encode`方法实现了`Codec`接口中的`encode`方法。
+ *    - 该方法目前抛出`UnsupportedOperationException`异常，表示不支持编码操作。
+ *
+ * 6. **checkSerializationTypeFromRemote方法**：
+ *    - 该方法目前是空实现，没有具体逻辑。
+ *
+ * 7. **decode(Channel channel, InputStream input)方法**：
+ *    - 该方法从输入流中读取数据并进行解码。
+ *    - 首先通过`CodecSupport.getSerialization`获取序列化器，并使用该序列化器反序列化输入流。
+ *    - 从输入流中读取Dubbo版本号、路径、版本号、方法名和参数类型描述，并设置到当前对象的附件中。
+ *    - 如果系统属性`SERIALIZATION_SECURITY_CHECK_KEY`为`true`，则调用`CodecSupport.checkSerialization`进行安全检查。
+ *    - 最后，读取方法参数并存储在`args`数组中。
+ *
+ * 总结来说，`DecodeableRpcInvocation`类主要负责从输入流中解码RPC调用的相关信息，并将其存储在对象中以便后续处理。
+ */
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcInvocation.class);
