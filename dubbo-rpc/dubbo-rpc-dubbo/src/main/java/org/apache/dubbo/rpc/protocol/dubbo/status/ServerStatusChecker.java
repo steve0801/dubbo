@@ -28,33 +28,55 @@ import java.util.List;
 /**
  * ServerStatusChecker
  */
+/**
+ * ServerStatusChecker
+ * 该类用于检查Dubbo协议服务器的状态
+ */
 @Activate
 public class ServerStatusChecker implements StatusChecker {
 
+    /**
+     * 检查所有Dubbo协议服务器的状态
+     * @return 返回一个包含服务器状态信息的Status对象
+     */
     @Override
     public Status check() {
+        // 获取所有的Dubbo协议服务器
         List<ProtocolServer> servers = DubboProtocol.getDubboProtocol().getServers();
+        // 如果没有服务器，则返回未知状态
         if (servers == null || servers.isEmpty()) {
             return new Status(Status.Level.UNKNOWN);
         }
+        // 初始状态为OK
         Status.Level level = Status.Level.OK;
+        // 用于存储服务器状态信息的字符串构建器
         StringBuilder buf = new StringBuilder();
+        // 遍历所有服务器
         for (ProtocolServer protocolServer : servers) {
+            // 获取远程服务器实例
             RemotingServer server = protocolServer.getRemotingServer();
+            // 如果服务器未绑定，则将状态设置为ERROR并记录地址
             if (!server.isBound()) {
                 level = Status.Level.ERROR;
+                // 清空之前的状态信息
                 buf.setLength(0);
+                // 记录未绑定服务器的本地地址
                 buf.append(server.getLocalAddress());
+                // 发现未绑定的服务器，跳出循环
                 break;
             }
+            // 如果已经有服务器信息，添加分隔符
             if (buf.length() > 0) {
                 buf.append(',');
             }
+            // 记录服务器地址
             buf.append(server.getLocalAddress());
             buf.append("(clients:");
+            // 记录连接到该服务器的客户端数量
             buf.append(server.getChannels().size());
             buf.append(')');
         }
+        // 返回包含状态级别和详细信息的Status对象
         return new Status(level, buf.toString());
     }
 
