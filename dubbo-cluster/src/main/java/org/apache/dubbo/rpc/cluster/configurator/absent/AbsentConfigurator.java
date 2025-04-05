@@ -23,12 +23,15 @@ import org.apache.dubbo.rpc.cluster.configurator.AbstractConfigurator;
  * AbsentConfigurator
  *
  */
+// 缺失配置器类，继承自AbstractConfigurator
 public class AbsentConfigurator extends AbstractConfigurator {
 
+    // 构造函数，调用父类构造函数
     public AbsentConfigurator(URL url) {
         super(url);
     }
 
+    // 实现抽象方法，仅在当前URL不存在参数时添加配置URL的参数
     @Override
     public URL doConfigure(URL currentUrl, URL configUrl) {
         return currentUrl.addParametersIfAbsent(configUrl.getParameters());

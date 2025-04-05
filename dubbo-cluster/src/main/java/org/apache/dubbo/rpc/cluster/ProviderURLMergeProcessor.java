@@ -21,6 +21,7 @@ import org.apache.dubbo.common.extension.SPI;
 
 import java.util.Map;
 
+// 提供者URL合并处理器接口，使用SPI机制，默认实现为"default"
 @SPI("default")
 public interface ProviderURLMergeProcessor {
 
@@ -31,10 +32,13 @@ public interface ProviderURLMergeProcessor {
      * @param localParametersMap consumer url parameters
      * @return
      */
+    // 合并提供者URL和消费者URL参数
     URL mergeUrl(URL remoteUrl, Map<String, String> localParametersMap);
 
+    // 默认方法，合并本地参数
     default Map<String, String> mergeLocalParams(Map<String, String> localMap) { return localMap; }
 
+    // 默认方法，判断是否接受该提供者URL和本地参数
     default boolean accept(URL providerUrl, Map<String, String> localParametersMap) {
         return true;
     }

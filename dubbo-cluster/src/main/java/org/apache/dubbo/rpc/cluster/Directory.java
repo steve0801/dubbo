@@ -32,6 +32,7 @@ import java.util.List;
  *
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
  */
+// 目录接口，继承自Node接口
 public interface Directory<T> extends Node {
 
     /**
@@ -39,6 +40,7 @@ public interface Directory<T> extends Node {
      *
      * @return service type.
      */
+    // 获取服务类型
     Class<T> getInterface();
 
     /**
@@ -46,26 +48,35 @@ public interface Directory<T> extends Node {
      *
      * @return invokers
      */
+    // 根据调用信息列出可用的调用者
     List<Invoker<T>> list(Invocation invocation) throws RpcException;
 
+    // 获取所有调用者
     List<Invoker<T>> getAllInvokers();
 
+    // 获取消费者URL
     URL getConsumerUrl();
 
+    // 判断是否已销毁
     boolean isDestroyed();
 
+    // 默认方法，判断目录是否为空
     default boolean isEmpty() {
         return CollectionUtils.isEmpty(getAllInvokers());
     }
 
+    // 默认方法，判断是否为服务发现
     default boolean isServiceDiscovery() {
         return false;
     }
 
+    // 丢弃地址
     void discordAddresses();
 
+    // 获取路由链
     RouterChain<T> getRouterChain();
 
+    // 默认方法，判断是否接收到通知
     default boolean isNotificationReceived() {
         return false;
     }

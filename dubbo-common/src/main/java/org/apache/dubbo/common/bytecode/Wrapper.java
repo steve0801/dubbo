@@ -39,46 +39,59 @@ import java.util.stream.Collectors;
 /**
  * Wrapper.
  */
+// 定义一个抽象类Wrapper
 public abstract class Wrapper {
+    // 类包装映射
     private static final Map<Class<?>, Wrapper> WRAPPER_MAP = new ConcurrentHashMap<Class<?>, Wrapper>(); //class wrapper map
+    // 空字符串数组
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    // Object方法名称
     private static final String[] OBJECT_METHODS = new String[]{"getClass", "hashCode", "toString", "equals"};
+    // Object包装器
     private static final Wrapper OBJECT_WRAPPER = new Wrapper() {
+        // 获取方法名
         @Override
         public String[] getMethodNames() {
             return OBJECT_METHODS;
         }
 
+        // 获取声明的方法名
         @Override
         public String[] getDeclaredMethodNames() {
             return OBJECT_METHODS;
         }
 
+        // 获取属性名
         @Override
         public String[] getPropertyNames() {
             return EMPTY_STRING_ARRAY;
         }
 
+        // 获取属性类型
         @Override
         public Class<?> getPropertyType(String pn) {
             return null;
         }
 
+        // 获取属性值
         @Override
         public Object getPropertyValue(Object instance, String pn) throws NoSuchPropertyException {
             throw new NoSuchPropertyException("Property [" + pn + "] not found.");
         }
 
+        // 设置属性值
         @Override
         public void setPropertyValue(Object instance, String pn, Object pv) throws NoSuchPropertyException {
             throw new NoSuchPropertyException("Property [" + pn + "] not found.");
         }
 
+        // 判断是否有指定的属性
         @Override
         public boolean hasProperty(String name) {
             return false;
         }
 
+        // 调用方法
         @Override
         public Object invokeMethod(Object instance, String mn, Class<?>[] types, Object[] args) throws NoSuchMethodException {
             if ("getClass".equals(mn)) {
@@ -99,13 +112,14 @@ public abstract class Wrapper {
             throw new NoSuchMethodException("Method [" + mn + "] not found.");
         }
     };
+    // 包装类计数器
     private static AtomicLong WRAPPER_CLASS_COUNTER = new AtomicLong(0);
 
     /**
-     * get wrapper.
+     * 获取包装器。
      *
-     * @param c Class instance.
-     * @return Wrapper instance(not null).
+     * @param c 类实例。
+     * @return 包装器实例（非空）。
      */
     public static Wrapper getWrapper(Class<?> c) {
         while (ClassGenerator.isDynamicClass(c)) // can not wrapper on dynamic class.
@@ -141,7 +155,7 @@ public abstract class Wrapper {
         List<String> mns = new ArrayList<>(); // method names.
         List<String> dmns = new ArrayList<>(); // declaring method names.
 
-        // get all public field.
+        // 获取所有公共字段
         for (Field f : c.getFields()) {
             String fn = f.getName();
             Class<?> ft = f.getType();
@@ -168,21 +182,21 @@ public abstract class Wrapper {
         }
 
         Method[] methods = Arrays.stream(c.getMethods())
-                                 .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
-                                 .collect(Collectors.toList())
-                                 .toArray(new Method[] {});
-        // get all public method.
+            .filter(method -> allMethod.contains(ReflectUtils.getDesc(method)))
+            .collect(Collectors.toList())
+            .toArray(new Method[] {});
+        // 获取所有公共方法
         boolean hasMethod = hasMethods(methods);
         if (hasMethod) {
             Map<String, Integer> sameNameMethodCount = new HashMap<>((int) (methods.length / 0.75f) + 1);
             for (Method m : methods) {
                 sameNameMethodCount.compute(m.getName(),
-                        (key, oldValue) -> oldValue == null ? 1 : oldValue + 1);
+                    (key, oldValue) -> oldValue == null ? 1 : oldValue + 1);
             }
 
             c3.append(" try{");
             for (Method m : methods) {
-                //ignore Object's method.
+                // 忽略Object的方法
                 if (m.getDeclaringClass() == Object.class) {
                     continue;
                 }
@@ -197,7 +211,7 @@ public abstract class Wrapper {
                     if (len > 0) {
                         for (int l = 0; l < len; l++) {
                             c3.append(" && ").append(" $3[").append(l).append("].getName().equals(\"")
-                                    .append(m.getParameterTypes()[l].getName()).append("\")");
+                                .append(m.getParameterTypes()[l].getName()).append("\")");
                         }
                     }
                 }
@@ -225,7 +239,7 @@ public abstract class Wrapper {
 
         c3.append(" throw new " + NoSuchMethodException.class.getName() + "(\"Not found method \\\"\"+$2+\"\\\" in class " + c.getName() + ".\"); }");
 
-        // deal with get/set method.
+        // 处理get/set方法
         Matcher matcher;
         for (Map.Entry<String, Method> entry : ms.entrySet()) {
             String md = entry.getKey();
@@ -248,17 +262,17 @@ public abstract class Wrapper {
         c1.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or setter method in class " + c.getName() + ".\"); }");
         c2.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or getter method in class " + c.getName() + ".\"); }");
 
-        // make class
+        // 创建类
         long id = WRAPPER_CLASS_COUNTER.getAndIncrement();
         ClassGenerator cc = ClassGenerator.newInstance(cl);
         cc.setClassName((Modifier.isPublic(c.getModifiers()) ? Wrapper.class.getName() : c.getName() + "$sw") + id);
         cc.setSuperClass(Wrapper.class);
 
         cc.addDefaultConstructor();
-        cc.addField("public static String[] pns;"); // property name array.
-        cc.addField("public static " + Map.class.getName() + " pts;"); // property type map.
-        cc.addField("public static String[] mns;"); // all method name array.
-        cc.addField("public static String[] dmns;"); // declared method name array.
+        cc.addField("public static String[] pns;"); // 属性名数组
+        cc.addField("public static " + Map.class.getName() + " pts;"); // 属性类型映射
+        cc.addField("public static String[] mns;"); // 所有方法名数组
+        cc.addField("public static String[] dmns;"); // 声明的方法名数组
         for (int i = 0, len = ms.size(); i < len; i++) {
             cc.addField("public static Class[] mts" + i + ";");
         }
@@ -274,7 +288,7 @@ public abstract class Wrapper {
 
         try {
             Class<?> wc = cc.toClass();
-            // setup static field.
+            // 设置静态字段
             wc.getField("pts").set(null, pts);
             wc.getField("pns").set(null, pts.keySet().toArray(new String[0]));
             wc.getField("mns").set(null, mns.toArray(new String[0]));
@@ -296,6 +310,7 @@ public abstract class Wrapper {
         }
     }
 
+    // 参数转换
     private static String arg(Class<?> cl, String name) {
         if (cl.isPrimitive()) {
             if (cl == Boolean.TYPE) {
@@ -327,6 +342,7 @@ public abstract class Wrapper {
         return "(" + ReflectUtils.getName(cl) + ")" + name;
     }
 
+    // 参数列表转换
     private static String args(Class<?>[] cs, String name) {
         int len = cs.length;
         if (len == 0) {
@@ -342,10 +358,12 @@ public abstract class Wrapper {
         return sb.toString();
     }
 
+    // 获取属性名
     private static String propertyName(String pn) {
         return pn.length() == 1 || Character.isLowerCase(pn.charAt(1)) ? Character.toLowerCase(pn.charAt(0)) + pn.substring(1) : pn;
     }
 
+    // 判断是否包含方法
     private static boolean hasMethods(Method[] methods) {
         if (methods == null || methods.length == 0) {
             return false;
@@ -359,52 +377,52 @@ public abstract class Wrapper {
     }
 
     /**
-     * get property name array.
+     * 获取属性名数组。
      *
-     * @return property name array.
+     * @return 属性名数组。
      */
     abstract public String[] getPropertyNames();
 
     /**
-     * get property type.
+     * 获取属性类型。
      *
-     * @param pn property name.
-     * @return Property type or nul.
+     * @param pn 属性名。
+     * @return 属性类型或null。
      */
     abstract public Class<?> getPropertyType(String pn);
 
     /**
-     * has property.
+     * 是否包含属性。
      *
-     * @param name property name.
-     * @return has or has not.
+     * @param name 属性名。
+     * @return 是否包含。
      */
     abstract public boolean hasProperty(String name);
 
     /**
-     * get property value.
+     * 获取属性值。
      *
-     * @param instance instance.
-     * @param pn       property name.
-     * @return value.
+     * @param instance 实例。
+     * @param pn       属性名。
+     * @return 值。
      */
     abstract public Object getPropertyValue(Object instance, String pn) throws NoSuchPropertyException, IllegalArgumentException;
 
     /**
-     * set property value.
+     * 设置属性值。
      *
-     * @param instance instance.
-     * @param pn       property name.
-     * @param pv       property value.
+     * @param instance 实例。
+     * @param pn       属性名。
+     * @param pv       属性值。
      */
     abstract public void setPropertyValue(Object instance, String pn, Object pv) throws NoSuchPropertyException, IllegalArgumentException;
 
     /**
-     * get property value.
+     * 获取属性值。
      *
-     * @param instance instance.
-     * @param pns      property name array.
-     * @return value array.
+     * @param instance 实例。
+     * @param pns      属性名数组。
+     * @return 值数组。
      */
     public Object[] getPropertyValues(Object instance, String[] pns) throws NoSuchPropertyException, IllegalArgumentException {
         Object[] ret = new Object[pns.length];
@@ -415,11 +433,11 @@ public abstract class Wrapper {
     }
 
     /**
-     * set property value.
+     * 设置属性值。
      *
-     * @param instance instance.
-     * @param pns      property name array.
-     * @param pvs      property value array.
+     * @param instance 实例。
+     * @param pns      属性名数组。
+     * @param pvs      属性值数组。
      */
     public void setPropertyValues(Object instance, String[] pns, Object[] pvs) throws NoSuchPropertyException, IllegalArgumentException {
         if (pns.length != pvs.length) {
@@ -432,24 +450,24 @@ public abstract class Wrapper {
     }
 
     /**
-     * get method name array.
+     * 获取方法名数组。
      *
-     * @return method name array.
+     * @return 方法名数组。
      */
     abstract public String[] getMethodNames();
 
     /**
-     * get method name array.
+     * 获取声明的方法名数组。
      *
-     * @return method name array.
+     * @return 方法名数组。
      */
     abstract public String[] getDeclaredMethodNames();
 
     /**
-     * has method.
+     * 是否包含方法。
      *
-     * @param name method name.
-     * @return has or has not.
+     * @param name 方法名。
+     * @return 是否包含。
      */
     public boolean hasMethod(String name) {
         for (String mn : getMethodNames()) {
@@ -461,13 +479,13 @@ public abstract class Wrapper {
     }
 
     /**
-     * invoke method.
+     * 调用方法。
      *
-     * @param instance instance.
-     * @param mn       method name.
-     * @param types
-     * @param args     argument array.
-     * @return return value.
+     * @param instance 实例。
+     * @param mn       方法名。
+     * @param types    参数类型数组。
+     * @param args     参数数组。
+     * @return 返回值。
      */
     abstract public Object invokeMethod(Object instance, String mn, Class<?>[] types, Object[] args) throws NoSuchMethodException, InvocationTargetException;
 }

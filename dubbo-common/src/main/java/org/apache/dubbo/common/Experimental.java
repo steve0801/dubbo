@@ -24,14 +24,24 @@ import java.lang.annotation.Target;
 /**
  * Indicating unstable API, may get removed or changed in the next release.
  */
+// 定义注解的保留策略为CLASS级别，表示该注解会保留在class文件中
 @Retention(RetentionPolicy.CLASS)
+// 指定该注解可以应用的目标元素类型
 @Target({
+        // 可以应用于注解类型
         ElementType.ANNOTATION_TYPE,
+        // 可以应用于构造方法
         ElementType.CONSTRUCTOR,
+        // 可以应用于字段
         ElementType.FIELD,
+        // 可以应用于方法
         ElementType.METHOD,
+        // 可以应用于包
         ElementType.PACKAGE,
+        // 可以应用于类、接口、枚举等类型
         ElementType.TYPE})
+// 定义一个名为Experimental的注解
 public @interface Experimental {
+    // 定义注解的value属性，用于存储实验性功能的描述信息
     String value();
 }

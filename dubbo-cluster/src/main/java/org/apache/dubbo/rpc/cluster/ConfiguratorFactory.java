@@ -24,6 +24,7 @@ import org.apache.dubbo.common.extension.SPI;
  * ConfiguratorFactory. (SPI, Singleton, ThreadSafe)
  *
  */
+// 配置器工厂接口，使用SPI机制
 @SPI
 public interface ConfiguratorFactory {
 
@@ -33,7 +34,9 @@ public interface ConfiguratorFactory {
      * @param url - configurator url.
      * @return configurator instance.
      */
+    // 获取配置器实例的适配方法，根据URL中的协议进行适配
     @Adaptive("protocol")
     Configurator getConfigurator(URL url);
 
 }
+

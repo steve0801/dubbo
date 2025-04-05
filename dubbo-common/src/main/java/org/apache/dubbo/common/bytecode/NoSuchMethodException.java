@@ -21,12 +21,15 @@ package org.apache.dubbo.common.bytecode;
  */
 
 public class NoSuchMethodException extends RuntimeException {
+    // 定义序列版本UID
     private static final long serialVersionUID = -2725364246023268766L;
 
+    // 无参数构造函数，调用父类的无参数构造函数
     public NoSuchMethodException() {
         super();
     }
 
+    // 带有错误信息的构造函数，调用父类带有错误信息的构造函数
     public NoSuchMethodException(String msg) {
         super(msg);
     }

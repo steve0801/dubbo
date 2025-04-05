@@ -24,8 +24,10 @@ import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
  * OverrideConfiguratorFactory
  *
  */
+// 覆盖配置器工厂类，实现ConfiguratorFactory接口
 public class OverrideConfiguratorFactory implements ConfiguratorFactory {
 
+    // 获取配置器实例
     @Override
     public Configurator getConfigurator(URL url) {
         return new OverrideConfigurator(url);

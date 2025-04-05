@@ -23,12 +23,15 @@ import org.apache.dubbo.rpc.cluster.configurator.AbstractConfigurator;
  * OverrideConfigurator
  *
  */
+// 覆盖配置器类，继承自AbstractConfigurator
 public class OverrideConfigurator extends AbstractConfigurator {
 
+    // 构造函数，调用父类构造函数
     public OverrideConfigurator(URL url) {
         super(url);
     }
 
+    // 实现抽象方法，将配置URL的参数添加到当前URL中
     @Override
     public URL doConfigure(URL currentUrl, URL configUrl) {
         return currentUrl.addParameters(configUrl.getParameters());

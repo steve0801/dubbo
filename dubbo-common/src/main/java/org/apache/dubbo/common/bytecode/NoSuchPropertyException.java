@@ -21,12 +21,15 @@ package org.apache.dubbo.common.bytecode;
  */
 
 public class NoSuchPropertyException extends RuntimeException {
+    // 定义序列化版本UID
     private static final long serialVersionUID = -2725364246023268766L;
 
+    // 无参构造函数，调用父类的无参构造函数
     public NoSuchPropertyException() {
         super();
     }
 
+    // 带有错误信息的构造函数，调用父类带有错误信息的构造函数
     public NoSuchPropertyException(String msg) {
         super(msg);
     }

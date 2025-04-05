@@ -45,12 +45,16 @@ import static org.apache.dubbo.rpc.cluster.Constants.OVERRIDE_PROVIDERS_KEY;
 /**
  * AbstractOverrideConfigurator
  */
+// 抽象配置器类，实现Configurator接口
 public abstract class AbstractConfigurator implements Configurator {
 
+    // 用于标识以~开头的特殊参数
     private static final String TILDE = "~";
 
+    // 配置器URL
     private final URL configuratorUrl;
 
+    // 构造函数，初始化配置器URL
     public AbstractConfigurator(URL url) {
         if (url == null) {
             throw new IllegalArgumentException("configurator url == null");
@@ -58,19 +62,21 @@ public abstract class AbstractConfigurator implements Configurator {
         this.configuratorUrl = url;
     }
 
+    // 获取配置器URL
     @Override
     public URL getUrl() {
         return configuratorUrl;
     }
 
+    // 配置URL，根据配置器URL对传入的URL进行配置
     @Override
     public URL configure(URL url) {
-        // If override url is not enabled or is invalid, just return.
+        // 如果配置器URL未启用或无效，直接返回原URL
         if (!configuratorUrl.getParameter(ENABLED_KEY, true) || configuratorUrl.getHost() == null || url == null || url.getHost() == null) {
             return url;
         }
         /*
-         * This if branch is created since 2.7.0.
+         * 从2.7.0版本开始新增的分支
          */
         String apiVersion = configuratorUrl.getParameter(CONFIG_VERSION_KEY);
         if (StringUtils.isNotEmpty(apiVersion)) {
@@ -84,7 +90,7 @@ public abstract class AbstractConfigurator implements Configurator {
             }
         }
         /*
-         * This else branch is deprecated and is left only to keep compatibility with versions before 2.7.0
+         * 该else分支已弃用，仅用于保持与2.7.0之前版本的兼容性
          */
         else {
             url = configureDeprecated(url);
@@ -92,33 +98,33 @@ public abstract class AbstractConfigurator implements Configurator {
         return url;
     }
 
+    // 已弃用的配置方法，用于兼容旧版本
     @Deprecated
     private URL configureDeprecated(URL url) {
-        // If override url has port, means it is a provider address. We want to control a specific provider with this override url, it may take effect on the specific provider instance or on consumers holding this provider instance.
+        // 如果配置器URL有端口，表示是提供者地址
         if (configuratorUrl.getPort() != 0) {
             if (url.getPort() == configuratorUrl.getPort()) {
                 return configureIfMatch(url.getHost(), url);
             }
         } else {
             /*
-             *  override url don't have a port, means the ip override url specify is a consumer address or 0.0.0.0.
-             *  1.If it is a consumer ip address, the intention is to control a specific consumer instance, it must takes effect at the consumer side, any provider received this override url should ignore.
-             *  2.If the ip is 0.0.0.0, this override url can be used on consumer, and also can be used on provider.
+             * 配置器URL没有端口，表示是消费者地址或0.0.0.0
              */
             if (url.getSide(PROVIDER).equals(CONSUMER)) {
-                // NetUtils.getLocalHost is the ip address consumer registered to registry.
+                // NetUtils.getLocalHost是消费者注册到注册中心的IP地址
                 return configureIfMatch(NetUtils.getLocalHost(), url);
             } else if (url.getSide(CONSUMER).equals(PROVIDER)) {
-                // take effect on all providers, so address must be 0.0.0.0, otherwise it won't flow to this if branch
+                // 对所有提供者生效，所以地址必须是0.0.0.0
                 return configureIfMatch(ANYHOST_VALUE, url);
             }
         }
         return url;
     }
 
+    // 如果匹配则配置URL
     private URL configureIfMatch(String host, URL url) {
         if (ANYHOST_VALUE.equals(configuratorUrl.getHost()) || host.equals(configuratorUrl.getHost())) {
-            // TODO, to support wildcards
+            // TODO，待补充：支持通配符
             String providers = configuratorUrl.getParameter(OVERRIDE_PROVIDERS_KEY);
             if (StringUtils.isEmpty(providers) || providers.contains(url.getAddress()) || providers.contains(ANYHOST_VALUE)) {
                 String configApplication = configuratorUrl.getApplication(configuratorUrl.getUsername());
@@ -158,6 +164,7 @@ public abstract class AbstractConfigurator implements Configurator {
         return url;
     }
 
+    // 判断key是否以~开头
     private boolean startWithTilde(String key) {
         if (StringUtils.isNotEmpty(key) && key.startsWith(TILDE)) {
             return true;
@@ -165,6 +172,8 @@ public abstract class AbstractConfigurator implements Configurator {
         return false;
     }
 
+    // 抽象方法，由子类实现具体的配置逻辑
     protected abstract URL doConfigure(URL currentUrl, URL configUrl);
 
 }
+

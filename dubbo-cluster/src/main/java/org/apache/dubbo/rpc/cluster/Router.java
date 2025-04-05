@@ -31,8 +31,10 @@ import java.util.List;
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
  * @see org.apache.dubbo.rpc.cluster.Directory#list(Invocation)
  */
+// 路由器接口，继承自Comparable接口
 public interface Router extends Comparable<Router> {
 
+    // 默认优先级值
     int DEFAULT_PRIORITY = Integer.MAX_VALUE;
 
     /**
@@ -40,6 +42,7 @@ public interface Router extends Comparable<Router> {
      *
      * @return url
      */
+    // 获取路由器的URL
     URL getUrl();
 
     /**
@@ -51,8 +54,8 @@ public interface Router extends Comparable<Router> {
      * @return routed invokers
      * @throws RpcException
      */
+    // 根据当前路由规则过滤调用者，仅返回符合规则的调用者
     <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException;
-
 
     /**
      * Notify the router the invoker list. Invoker list may change from time to time. This method gives the router a
@@ -61,6 +64,7 @@ public interface Router extends Comparable<Router> {
      * @param invokers invoker list
      * @param <T>      invoker's type
      */
+    // 通知路由器调用者列表的变化，以便在路由前进行准备
     default <T> void notify(List<Invoker<T>> invokers) {
 
     }
@@ -71,6 +75,7 @@ public interface Router extends Comparable<Router> {
      *
      * @return true if the router need to execute every time.
      */
+    // 判断路由器是否需要在每次RPC调用时执行
     boolean isRuntime();
 
     /**
@@ -80,6 +85,7 @@ public interface Router extends Comparable<Router> {
      *
      * @return true to execute if none of invokers matches the current router
      */
+    // 判断当没有调用者匹配路由规则时，路由器是否仍然生效
     boolean isForce();
 
     /**
@@ -87,12 +93,15 @@ public interface Router extends Comparable<Router> {
      *
      * @return router's priority
      */
+    // 获取路由器的优先级，用于排序
     int getPriority();
 
+    // 默认方法，停止路由器
     default void stop() {
         //do nothing by default
     }
 
+    // 比较方法，根据优先级比较路由器
     @Override
     default int compareTo(Router o) {
         if (o == null) {

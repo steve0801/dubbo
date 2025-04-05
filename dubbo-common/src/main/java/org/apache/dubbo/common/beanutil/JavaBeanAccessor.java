@@ -18,23 +18,28 @@ package org.apache.dubbo.common.beanutil;
 
 public enum JavaBeanAccessor {
 
+    // 字段访问器。
     /**
      * Field accessor.
      */
     FIELD,
+    // 方法访问器。
     /**
      * Method accessor.
      */
     METHOD,
+    // 优先使用方法，如果不可用则使用字段。
     /**
      * Method prefer to field.
      */
     ALL;
 
+    // 判断是否通过方法进行访问。
     public static boolean isAccessByMethod(JavaBeanAccessor accessor) {
         return METHOD.equals(accessor) || ALL.equals(accessor);
     }
 
+    // 判断是否通过字段进行访问。
     public static boolean isAccessByField(JavaBeanAccessor accessor) {
         return FIELD.equals(accessor) || ALL.equals(accessor);
     }

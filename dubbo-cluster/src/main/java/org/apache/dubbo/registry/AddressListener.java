@@ -23,6 +23,8 @@ import org.apache.dubbo.rpc.cluster.Directory;
 
 import java.util.List;
 
+
+// 地址监听器接口，用于处理地址列表的变化
 @SPI(scope = ExtensionScope.MODULE)
 public interface AddressListener {
 
@@ -33,8 +35,10 @@ public interface AddressListener {
      * @param consumerUrl
      * @param registryDirectory
      */
+    // 通知方法，当接收到地址列表时调用
     List<URL> notify(List<URL> addresses, URL consumerUrl, Directory registryDirectory);
 
+    // 销毁方法，默认实现为空
     default void destroy(URL consumerUrl, Directory registryDirectory) {
 
     }

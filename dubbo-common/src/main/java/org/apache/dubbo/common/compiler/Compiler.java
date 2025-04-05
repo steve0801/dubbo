@@ -23,15 +23,16 @@ import org.apache.dubbo.common.extension.SPI;
  * Compiler. (SPI, Singleton, ThreadSafe)
  */
 @SPI(value = "javassist", scope = ExtensionScope.FRAMEWORK)
+// 定义Compiler接口，并使用@SPI注解，指定默认实现为"javassist"，作用范围为框架级
 public interface Compiler {
 
     /**
-     * Compile java source code.
+     * 编译Java源代码。
      *
-     * @param code        Java source code
-     * @param classLoader classloader
-     * @return Compiled class
+     * @param code        Java源代码字符串
+     * @param classLoader 类加载器
+     * @return 编译后的Class对象
      */
+    // 该方法用于编译给定的Java源代码，并返回编译后的类对象
     Class<?> compile(String code, ClassLoader classLoader);
-
 }

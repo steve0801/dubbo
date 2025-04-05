@@ -24,12 +24,15 @@ import org.apache.dubbo.rpc.model.FrameworkModel;
 import org.apache.dubbo.rpc.model.ModuleModel;
 import org.apache.dubbo.rpc.model.ScopeModelInitializer;
 
+// 集群作用域模型初始化器，实现了ScopeModelInitializer接口
 public class ClusterScopeModelInitializer implements ScopeModelInitializer {
+    // 初始化框架模型的方法，当前为空实现
     @Override
     public void initializeFrameworkModel(FrameworkModel frameworkModel) {
 
     }
 
+    // 初始化应用模型的方法，注册MergerFactory和ClusterUtils到Bean工厂
     @Override
     public void initializeApplicationModel(ApplicationModel applicationModel) {
         ScopeBeanFactory beanFactory = applicationModel.getBeanFactory();
@@ -37,6 +40,7 @@ public class ClusterScopeModelInitializer implements ScopeModelInitializer {
         beanFactory.registerBean(ClusterUtils.class);
     }
 
+    // 初始化模块模型的方法，当前为空实现
     @Override
     public void initializeModuleModel(ModuleModel moduleModel) {
 

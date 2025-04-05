@@ -31,14 +31,19 @@ import org.apache.dubbo.rpc.Invoker;
  *
  * @param <T>
  */
+// 集群调用者接口，继承自Invoker接口
 public interface ClusterInvoker<T> extends Invoker<T> {
 
+    // 获取注册中心的URL
     URL getRegistryUrl();
 
+    // 获取目录对象
     Directory<T> getDirectory();
 
+    // 判断是否已销毁
     boolean isDestroyed();
 
+    // 默认方法，判断是否为服务发现
     default boolean isServiceDiscovery() {
         Directory<T> directory = getDirectory();
         if (directory == null) {
@@ -47,6 +52,7 @@ public interface ClusterInvoker<T> extends Invoker<T> {
         return directory.isServiceDiscovery();
     }
 
+    // 默认方法，判断是否存在代理调用者
     default boolean hasProxyInvokers() {
         Directory<T> directory = getDirectory();
         if (directory == null) {

@@ -33,58 +33,71 @@ import java.util.List;
  */
 public class InstantiationStrategy {
 
+    // 是否支持带有参数的构造函数。
     private boolean supportConstructorWithArguments;
+    // 用于访问作用域模型的工具类。
     private ScopeModelAccessor scopeModelAccessor;
 
+    // 默认构造函数，调用另一个构造函数初始化。
     public InstantiationStrategy() {
         this(null);
     }
 
+    // 构造函数，初始化InstantiationStrategy。
     public InstantiationStrategy(ScopeModelAccessor scopeModelAccessor) {
+        // 设置作用域模型访问器。
         this.scopeModelAccessor = scopeModelAccessor;
+        // 根据作用域模型访问器是否为空来决定是否支持带有参数的构造函数。
         this.supportConstructorWithArguments = (this.scopeModelAccessor != null);
     }
 
+    // 实例化指定类型的对象。
     public <T> T instantiate(Class<T> type) throws ReflectiveOperationException {
 
-        // 1. try default constructor
+        // 1. 尝试使用默认构造函数创建实例。
         try {
             return type.getConstructor().newInstance();
         } catch (NoSuchMethodException e) {
-            // ignore no default constructor
+            // 如果没有默认构造函数且不支持带参数的构造函数，则抛出异常。
             if (!supportConstructorWithArguments) {
                 throw new IllegalArgumentException("Default constructor was not found for type: " + type.getName());
             }
         }
 
-        // 2. use matched constructor if found
+        // 2. 查找匹配的构造函数。
         List<Constructor> matchedConstructors = new ArrayList<>();
         Constructor<?>[] declaredConstructors = type.getConstructors();
         for (Constructor<?> constructor : declaredConstructors) {
+            // 检查构造函数是否匹配。
             if (isMatched(constructor)) {
                 matchedConstructors.add(constructor);
             }
         }
+        // 如果找到多个匹配的构造函数，则抛出异常。
         if (matchedConstructors.size() > 1) {
             throw new IllegalArgumentException("Expect only one but found " +
                 matchedConstructors.size() + " matched constructors for type: " + type.getName() +
                 ", matched constructors: " + matchedConstructors);
         } else if (matchedConstructors.size() == 0) {
+            // 如果没有找到匹配的构造函数，则抛出异常。
             throw new IllegalArgumentException("None matched constructor was found for type: " + type.getName());
         }
 
-        // create instance with arguments
+        // 使用匹配的构造函数创建实例。
         Constructor constructor = matchedConstructors.get(0);
         Class[] parameterTypes = constructor.getParameterTypes();
         Object[] args = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
+            // 获取构造函数参数的值。
             args[i] = getArgumentValueForType(parameterTypes[i]);
         }
         return (T) constructor.newInstance(args);
     }
 
+    // 检查构造函数是否匹配。
     private boolean isMatched(Constructor<?> constructor) {
         for (Class<?> parameterType : constructor.getParameterTypes()) {
+            // 检查每个参数类型是否是支持的类型。
             if (!isSupportedConstructorParameterType(parameterType)) {
                 return false;
             }
@@ -92,12 +105,15 @@ public class InstantiationStrategy {
         return true;
     }
 
+    // 检查构造函数参数类型是否是支持的类型。
     private boolean isSupportedConstructorParameterType(Class<?> parameterType) {
+        // 支持的类型必须是ScopeModel或其子类。
         return ScopeModel.class.isAssignableFrom(parameterType);
     }
 
+    // 根据参数类型获取参数值。
     private Object getArgumentValueForType(Class parameterType) {
-        // get scope mode value
+        // 获取作用域模型的值。
         if (scopeModelAccessor != null) {
             if (parameterType == ScopeModel.class) {
                 return scopeModelAccessor.getScopeModel();

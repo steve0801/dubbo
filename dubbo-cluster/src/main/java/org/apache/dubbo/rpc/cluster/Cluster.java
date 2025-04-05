@@ -31,9 +31,11 @@ import org.apache.dubbo.rpc.model.ScopeModelUtil;
  * <a href="http://en.wikipedia.org/wiki/Fault-tolerant_system">Fault-Tolerant</a>
  *
  */
+// 集群接口，使用SPI机制，默认实现为failover
 @SPI(Cluster.DEFAULT)
 public interface Cluster {
 
+    // 默认的集群策略名称
     String DEFAULT = "failover";
 
     /**
@@ -44,17 +46,22 @@ public interface Cluster {
      * @return cluster invoker
      * @throws RpcException
      */
+    // 将目录中的invoker合并为一个虚拟invoker
     @Adaptive
     <T> Invoker<T> join(Directory<T> directory, boolean buildFilterChain) throws RpcException;
 
+    // 获取集群实例的静态方法，默认使用包装
     static Cluster getCluster(ScopeModel scopeModel, String name) {
         return getCluster(scopeModel, name, true);
     }
 
+    // 获取集群实例的静态方法，可指定是否使用包装
     static Cluster getCluster(ScopeModel scopeModel, String name, boolean wrap) {
+        // 如果名称为空，则使用默认的集群策略
         if (StringUtils.isEmpty(name)) {
             name = Cluster.DEFAULT;
         }
+        // 从扩展加载器中获取对应的集群实例
         return ScopeModelUtil.getApplicationModel(scopeModel).getExtensionLoader(Cluster.class).getExtension(name, wrap);
     }
 }

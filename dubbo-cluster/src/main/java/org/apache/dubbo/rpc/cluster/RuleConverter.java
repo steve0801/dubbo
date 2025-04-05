@@ -22,9 +22,11 @@ import org.apache.dubbo.common.extension.SPI;
 
 import java.util.List;
 
+// 规则转换器接口，使用SPI机制
 @SPI
 public interface RuleConverter {
 
+    // 将源对象转换为URL列表
     List<URL> convert(URL subscribeUrl, Object source);
 
 }

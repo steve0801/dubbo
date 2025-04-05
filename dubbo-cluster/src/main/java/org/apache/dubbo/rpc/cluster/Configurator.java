@@ -34,79 +34,59 @@ import static org.apache.dubbo.rpc.cluster.Constants.PRIORITY_KEY;
  * Configurator. (SPI, Prototype, ThreadSafe)
  *
  */
+// 配置器接口，继承自Comparable接口
 public interface Configurator extends Comparable<Configurator> {
 
-    /**
-     * Get the configurator url.
-     *
-     * @return configurator url.
-     */
+    // 获取配置器的URL
     URL getUrl();
 
-    /**
-     * Configure the provider url.
-     *
-     * @param url - old provider url.
-     * @return new provider url.
-     */
+    // 配置提供者URL，返回新的提供者URL
     URL configure(URL url);
 
-
-    /**
-     * Convert override urls to map for use when re-refer. Send all rules every time, the urls will be reassembled and
-     * calculated
-     *
-     * URL contract:
-     * <ol>
-     * <li>override://0.0.0.0/...( or override://ip:port...?anyhost=true)&para1=value1... means global rules
-     * (all of the providers take effect)</li>
-     * <li>override://ip:port...?anyhost=false Special rules (only for a certain provider)</li>
-     * <li>override:// rule is not supported... ,needs to be calculated by registry itself</li>
-     * <li>override://0.0.0.0/ without parameters means clearing the override</li>
-     * </ol>
-     *
-     * @param urls URL list to convert
-     * @return converted configurator list
-     */
+    // 将覆盖URL列表转换为配置器列表
     static Optional<List<Configurator>> toConfigurators(List<URL> urls) {
+        // 如果URL列表为空，返回空Optional
         if (CollectionUtils.isEmpty(urls)) {
             return Optional.empty();
         }
 
+        // 获取配置器工厂的适配扩展
         ConfiguratorFactory configuratorFactory = urls.get(0).getOrDefaultApplicationModel().getExtensionLoader(ConfiguratorFactory.class)
                 .getAdaptiveExtension();
 
+        // 创建配置器列表
         List<Configurator> configurators = new ArrayList<>(urls.size());
         for (URL url : urls) {
+            // 如果协议为空，清空配置器列表并跳出循环
             if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
                 configurators.clear();
                 break;
             }
+            // 获取URL参数并移除ANYHOST_KEY
             Map<String, String> override = new HashMap<>(url.getParameters());
-            //The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
             override.remove(ANYHOST_KEY);
+            // 如果参数为空，跳过当前URL
             if (CollectionUtils.isEmptyMap(override)) {
                 continue;
             }
+            // 添加配置器到列表
             configurators.add(configuratorFactory.getConfigurator(url));
         }
+        // 对配置器列表进行排序
         Collections.sort(configurators);
         return Optional.of(configurators);
     }
 
-    /**
-     * Sort by host, then by priority
-     * 1. the url with a specific host ip should have higher priority than 0.0.0.0
-     * 2. if two url has the same host, compare by priority value；
-     */
+    // 比较方法，先按主机名比较，再按优先级比较
     @Override
     default int compareTo(Configurator o) {
         if (o == null) {
             return -1;
         }
 
+        // 比较主机名
         int ipCompare = getUrl().getHost().compareTo(o.getUrl().getHost());
-        // host is the same, sort by priority
+        // 如果主机名相同，比较优先级
         if (ipCompare == 0) {
             int i = getUrl().getParameter(PRIORITY_KEY, 0);
             int j = o.getUrl().getParameter(PRIORITY_KEY, 0);

@@ -47,44 +47,49 @@ import static org.apache.dubbo.rpc.cluster.Constants.STATE_ROUTER_KEY;
 /**
  * Router chain
  */
+// 路由器链类，用于管理和执行多个路由器
 public class RouterChain<T> {
+    // 日志记录器
     private static final Logger logger = LoggerFactory.getLogger(RouterChain.class);
 
-    /**
-     * full list of addresses from registry, classified by method name.
-     */
+    // 从注册中心获取的完整地址列表，按方法名分类
     private volatile List<Invoker<T>> invokers = Collections.emptyList();
 
-    /**
-     * containing all routers, reconstruct every time 'route://' urls change.
-     */
+    // 包含所有路由器的列表，每次'route://' URLs变化时重建
     private volatile List<Router> routers = Collections.emptyList();
 
-    /**
-     * Fixed router instances: ConfigConditionRouter, TagRouter, e.g.,
-     * the rule for each instance may change but the instance will never delete or recreate.
-     */
+    // 固定的路由器实例，例如ConfigConditionRouter, TagRouter等
     private List<Router> builtinRouters = Collections.emptyList();
 
+    // 固定的状态路由器实例
     private List<StateRouter> builtinStateRouters = Collections.emptyList();
+    // 当前状态路由器列表
     private List<StateRouter> stateRouters = Collections.emptyList();
+    // 执行器仓库
     private final ExecutorRepository executorRepository;
 
+    // URL对象
     protected URL url;
 
+    // 地址缓存
     private AtomicReference<AddrCache<T>> cache = new AtomicReference<>();
 
+    // 循环许可信号量
     private final Semaphore loopPermit = new Semaphore(1);
     private final Semaphore loopPermitNotify = new Semaphore(1);
 
+    // 循环线程池
     private final ExecutorService loopPool;
 
+    // 首次构建缓存标志
     private AtomicBoolean firstBuildCache = new AtomicBoolean(true);
 
+    // 构建路由器链的静态方法
     public static <T> RouterChain<T> buildChain(URL url) {
         return new RouterChain<>(url);
     }
 
+    // 构造函数，初始化路由器链
     private RouterChain(URL url) {
         executorRepository = url.getOrDefaultApplicationModel().getExtensionLoader(ExecutorRepository.class)
             .getDefaultExtension();
@@ -108,32 +113,23 @@ public class RouterChain<T> {
             .sorted(StateRouter::compareTo)
             .collect(Collectors.toList());
 
-        // init state routers
+        // 初始化状态路由器
         initWithStateRouters(stateRouters);
     }
 
-    /**
-     * the resident routers must being initialized before address notification.
-     * FIXME: this method should not be public
-     */
+    // 初始化固定路由器
     public void initWithRouters(List<Router> builtinRouters) {
         this.builtinRouters = builtinRouters;
         this.routers = new ArrayList<>(builtinRouters);
     }
 
+    // 初始化固定状态路由器
     private void initWithStateRouters(List<StateRouter> builtinRouters) {
         this.builtinStateRouters = builtinRouters;
         this.stateRouters = new ArrayList<>(builtinRouters);
     }
 
-    /**
-     * If we use route:// protocol in version before 2.7.0, each URL will generate a Router instance, so we should
-     * keep the routers up to date, that is, each time router URLs changes, we should update the routers list, only
-     * keep the builtinRouters which are available all the time and the latest notified routers which are generated
-     * from URLs.
-     *
-     * @param routers routers from 'router://' rules in 2.6.x or before.
-     */
+    // 添加路由器
     public void addRouters(List<Router> routers) {
         List<Router> newRouters = new ArrayList<>();
         newRouters.addAll(builtinRouters);
@@ -142,6 +138,7 @@ public class RouterChain<T> {
         this.routers = newRouters;
     }
 
+    // 添加状态路由器
     public void addStateRouters(List<StateRouter> stateRouters) {
         List<StateRouter> newStateRouters = new ArrayList<>();
         newStateRouters.addAll(builtinStateRouters);
@@ -150,19 +147,17 @@ public class RouterChain<T> {
         this.stateRouters = newStateRouters;
     }
 
+    // 获取路由器列表
     public List<Router> getRouters() {
         return routers;
     }
 
+    // 获取状态路由器列表
     public List<StateRouter> getStateRouters() {
         return stateRouters;
     }
 
-    /**
-     * @param url
-     * @param invocation
-     * @return
-     */
+    // 路由方法，根据URL和调用信息选择调用者
     public List<Invoker<T>> route(URL url, Invocation invocation) {
 
         AddrCache<T> cache = this.cache.get();
@@ -191,10 +186,7 @@ public class RouterChain<T> {
         return finalInvokers;
     }
 
-    /**
-     * Notify router chain of the initial addresses from registry at the first time.
-     * Notify whenever addresses in registry change.
-     */
+    // 设置调用者列表，并通知路由器链
     public void setInvokers(List<Invoker<T>> invokers) {
         this.invokers = (invokers == null ? Collections.emptyList() : invokers);
         stateRouters.forEach(router -> router.notify(this.invokers));
@@ -202,10 +194,7 @@ public class RouterChain<T> {
         loop(true);
     }
 
-    /**
-     * Build the asynchronous address cache for stateRouter.
-     * @param notify Whether the addresses in registry have changed.
-     */
+    // 构建异步地址缓存
     private void buildCache(boolean notify) {
         if (CollectionUtils.isEmpty(invokers)) {
             return;
@@ -218,7 +207,7 @@ public class RouterChain<T> {
         for (StateRouter stateRouter : stateRouters) {
             try {
                 RouterCache routerCache = poolRouter(stateRouter, origin, copyInvokers, notify);
-                //file cache
+                // 文件缓存
                 routerCacheMap.put(stateRouter.getName(), routerCache);
             } catch (Throwable t) {
                 logger.error("Failed to pool router: " + stateRouter.getUrl() + ", cause: " + t.getMessage(), t);
@@ -230,14 +219,7 @@ public class RouterChain<T> {
         this.cache.set(newCache);
     }
 
-    /**
-     * Cache the address list for each StateRouter.
-     * @param router router
-     * @param origin The original address cache
-     * @param invokers The full address list
-     * @param notify Whether the addresses in registry has changed.
-     * @return
-     */
+    // 为每个状态路由器缓存地址列表
     private RouterCache poolRouter(StateRouter router, AddrCache<T> origin, List<Invoker<T>> invokers, boolean notify) {
         String routerName = router.getName();
         RouterCache routerCache;
@@ -252,16 +234,14 @@ public class RouterChain<T> {
         return routerCache;
     }
 
+    // 判断缓存是否缺失
     private boolean isCacheMiss(AddrCache<T> cache, String routerName) {
         return cache == null || cache.getCache() == null || cache.getInvokers() == null || cache.getCache().get(
             routerName)
             == null;
     }
 
-    /***
-     * Build the asynchronous address cache for stateRouter.
-     * @param notify Whether the addresses in registry has changed.
-     */
+    // 构建异步地址缓存
     public void loop(boolean notify) {
         if (firstBuildCache.compareAndSet(true,false)) {
             buildCache(notify);
@@ -286,6 +266,7 @@ public class RouterChain<T> {
         }
     }
 
+    // 通知循环任务
     class NotifyLoopRunnable implements Runnable {
 
         private final boolean notify;
@@ -303,6 +284,7 @@ public class RouterChain<T> {
         }
     }
 
+    // 销毁路由器链
     public void destroy() {
         invokers = Collections.emptyList();
         for (Router router : routers) {
@@ -325,5 +307,5 @@ public class RouterChain<T> {
         stateRouters = Collections.emptyList();
         builtinStateRouters = Collections.emptyList();
     }
-
 }
+

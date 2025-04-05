@@ -25,31 +25,45 @@ import org.apache.dubbo.rpc.model.ScopeModelAware;
 /**
  * AdaptiveCompiler. (SPI, Singleton, ThreadSafe)
  */
+// 使用@Adaptive注解，表示这是一个自适应的实现类
 @Adaptive
 public class AdaptiveCompiler implements Compiler, ScopeModelAware {
+    // 定义一个FrameworkModel对象，用于存储框架模型
     private FrameworkModel frameworkModel;
 
+    // 实现ScopeModelAware接口的setFrameworkModel方法
     @Override
     public void setFrameworkModel(FrameworkModel frameworkModel) {
+        // 设置frameworkModel
         this.frameworkModel = frameworkModel;
     }
 
+    // 定义一个volatile类型的静态变量DEFAULT_COMPILER，用于存储默认编译器名称
     private static volatile String DEFAULT_COMPILER;
 
+    // 提供一个静态方法来设置默认编译器名称
     public static void setDefaultCompiler(String compiler) {
+        // 设置默认编译器名称
         DEFAULT_COMPILER = compiler;
     }
 
+    // 重写Compiler接口的compile方法
     @Override
     public Class<?> compile(String code, ClassLoader classLoader) {
+        // 声明一个Compiler对象
         Compiler compiler;
+        // 获取Compiler的扩展加载器
         ExtensionLoader<Compiler> loader = frameworkModel.getExtensionLoader(Compiler.class);
+        // 复制DEFAULT_COMPILER的引用
         String name = DEFAULT_COMPILER; // copy reference
+        // 如果name不为空且长度大于0，则获取指定名称的Compiler扩展
         if (name != null && name.length() > 0) {
             compiler = loader.getExtension(name);
         } else {
+            // 否则，获取默认的Compiler扩展
             compiler = loader.getDefaultExtension();
         }
+        // 调用获取到的Compiler对象的compile方法进行编译
         return compiler.compile(code, classLoader);
     }
 

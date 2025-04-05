@@ -40,31 +40,44 @@ import static org.apache.dubbo.common.constants.CommonConstants.MAX_PROXY_COUNT;
  */
 
 public abstract class Proxy {
+    // 定义一个静态的最终变量，作为返回null的调用处理器
     public static final InvocationHandler RETURN_NULL_INVOKER = (proxy, method, args) -> null;
+
+    // 定义一个静态的最终变量，作为抛出不支持操作异常的调用处理器
     public static final InvocationHandler THROW_UNSUPPORTED_INVOKER = new InvocationHandler() {
         @Override
+        // 当调用代理对象的方法时，会抛出一个UnsupportedOperationException异常
         public Object invoke(Object proxy, Method method, Object[] args) {
             throw new UnsupportedOperationException("Method [" + ReflectUtils.getName(method) + "] unimplemented.");
         }
     };
+
+    // 用于生成代理类名的原子计数器
     private static final AtomicLong PROXY_CLASS_COUNTER = new AtomicLong(0);
+
+    // 获取当前Proxy类的包名
     private static final String PACKAGE_NAME = Proxy.class.getPackage().getName();
+
+    // 存储每个类加载器下的代理对象缓存映射
     private static final Map<ClassLoader, Map<String, Object>> PROXY_CACHE_MAP = new WeakHashMap<ClassLoader, Map<String, Object>>();
+
     // TODO 避免OOM
-    // cache class, avoid PermGen OOM.
+    // 缓存类，避免PermGen OOM。
     private static final Map<ClassLoader, Map<String, Object>> PROXY_CLASS_MAP = new WeakHashMap<ClassLoader, Map<String, Object>>();
 
+    // 用于标记正在生成中的代理类
     private static final Object PENDING_GENERATION_MARKER = new Object();
 
+    // 默认构造函数
     protected Proxy() {
     }
 
     /**
-     * Get proxy.
+     * 获取代理实例。
      *
-     * @param cl  class loader.
-     * @param ics interface class array.
-     * @return Proxy instance.
+     * @param cl  类加载器。
+     * @param ics 接口类数组。
+     * @return 代理实例。
      */
     public static Proxy getProxy(Class<?>... ics) {
         // TODO 不超过65535
@@ -72,7 +85,7 @@ public abstract class Proxy {
             throw new IllegalArgumentException("interface limit exceeded");
         }
 
-        // ClassLoader from App Interface should support load some class from Dubbo
+        // 从接口类获取类加载器
         ClassLoader cl = ics[0].getClassLoader();
         ClassLoader appClassLoader = ics[0].getClassLoader();
         ProtectionDomain domain = ics[0].getProtectionDomain();
@@ -97,12 +110,12 @@ public abstract class Proxy {
             sb.append(itf).append(';');
         }
 
-        // use interface class name list as key.
+        // 使用接口类名列表作为键
         String key = sb.toString();
 
-        // get cache by class loader.
+        // 根据类加载器获取缓存
         final Map<String, Object> cache;
-        // cache class
+        // 缓存类
         final Map<String, Object> classCache;
         synchronized (PROXY_CACHE_MAP) {
             cache = PROXY_CACHE_MAP.computeIfAbsent(cl, k -> new HashMap<>());
@@ -120,7 +133,7 @@ public abstract class Proxy {
                     }
                 }
 
-                // get Class by key.
+                // 通过键获取类
                 Object clazzObj = classCache.get(key);
                 if (null == clazzObj || clazzObj instanceof Reference<?>) {
                     Class<?> clazz = null;
@@ -208,7 +221,7 @@ public abstract class Proxy {
                 pkg = PACKAGE_NAME;
             }
 
-            // create ProxyInstance class.
+            // 创建ProxyInstance类
             String pcn = pkg + ".proxy" + id;
             ccp.setClassName(pcn);
             ccp.addField("public static java.lang.reflect.Method[] methods;");
@@ -218,7 +231,7 @@ public abstract class Proxy {
             Class<?> clazz = ccp.toClass(appClassLoader, domain);
             clazz.getField("methods").set(null, methods.toArray(new Method[0]));
 
-            // create Proxy class.
+            // 创建Proxy类
             String fcn = Proxy.class.getName() + id;
             ccm = ClassGenerator.newInstance(cl);
             ccm.setClassName(fcn);
@@ -236,7 +249,7 @@ public abstract class Proxy {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         } finally {
-            // release ClassGenerator
+            // 释放ClassGenerator
             if (ccp != null) {
                 ccp.release();
             }
@@ -255,6 +268,7 @@ public abstract class Proxy {
         return proxy;
     }
 
+    // 将参数转换为指定类型
     private static String asArgument(Class<?> cl, String name) {
         if (cl.isPrimitive()) {
             if (Boolean.TYPE == cl) {
@@ -287,18 +301,18 @@ public abstract class Proxy {
     }
 
     /**
-     * get instance with default handler.
+     * 使用默认处理程序获取实例。
      *
-     * @return instance.
+     * @return 实例。
      */
     public Object newInstance() {
         return newInstance(THROW_UNSUPPORTED_INVOKER);
     }
 
     /**
-     * get instance with special handler.
+     * 使用特定处理程序获取实例。
      *
-     * @return instance.
+     * @return 实例。
      */
     abstract public Object newInstance(InvocationHandler handler);
 }
