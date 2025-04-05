@@ -25,21 +25,20 @@ import java.util.function.Function;
  * @see Throwable
  * @since 2.7.5
  */
+// 可抛出异常的函数式接口
 @FunctionalInterface
 public interface ThrowableAction {
 
     /**
-     * Executes the action
-     *
-     * @throws Throwable if met with error
+     * 执行操作，可能抛出异常
+     * @throws Throwable 执行过程中遇到的错误
      */
     void execute() throws Throwable;
 
     /**
-     * Executes {@link ThrowableAction}
-     *
-     * @param action {@link ThrowableAction}
-     * @throws RuntimeException wrap {@link Exception} to {@link RuntimeException}
+     * 执行ThrowableAction操作
+     * @param action 要执行的ThrowableAction
+     * @throws RuntimeException 将异常包装为RuntimeException抛出
      */
     static void execute(ThrowableAction action) throws RuntimeException {
         try {

@@ -28,8 +28,10 @@ import org.apache.dubbo.common.config.configcenter.DynamicConfigurationFactory;
  */
 public class FileSystemDynamicConfigurationFactory extends AbstractDynamicConfigurationFactory {
 
+    // 创建基于文件系统的动态配置实例
     @Override
     protected DynamicConfiguration createDynamicConfiguration(URL url) {
+        // 返回一个新的FileSystemDynamicConfiguration实例
         return new FileSystemDynamicConfiguration(url);
     }
 }

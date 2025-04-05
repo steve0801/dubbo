@@ -22,70 +22,90 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  */
+// 部署器接口，定义了组件生命周期的基本操作
 public interface Deployer<E extends ScopeModel> {
 
     /**
-     * Initialize the component
+     * 初始化组件
+     * @throws IllegalStateException 如果初始化失败抛出异常
      */
     void initialize() throws IllegalStateException;
 
     /**
-     * Starts the component.
+     * 启动组件
+     * @return 返回CompletableFuture以便异步处理
+     * @throws IllegalStateException 如果启动失败抛出异常
      */
     CompletableFuture start() throws IllegalStateException;
 
     /**
-     * Stops the component.
+     * 停止组件
+     * @throws IllegalStateException 如果停止失败抛出异常
      */
     void stop() throws IllegalStateException;
 
     /**
-     * @return true if the component is added and waiting to start
+     * 检查组件是否处于待启动状态
+     * @return 如果是待启动状态返回true
      */
     boolean isPending();
 
     /**
-     * @return true if the component is starting or has been started.
+     * 检查组件是否正在运行(包括启动中和已启动)
+     * @return 如果正在运行返回true
      */
     boolean isRunning();
 
     /**
-     * @return true if the component has been started.
+     * 检查组件是否已启动
+     * @return 如果已启动返回true
      * @see #start()
      * @see #isStarting()
      */
     boolean isStarted();
 
     /**
-     * @return true if the component is starting.
+     * 检查组件是否正在启动
+     * @return 如果正在启动返回true
      * @see #isStarted()
      */
     boolean isStarting();
 
     /**
-     * @return true if the component is stopping.
+     * 检查组件是否正在停止
+     * @return 如果正在停止返回true
      * @see #isStopped()
      */
     boolean isStopping();
 
     /**
-     * @return true if the component is stopping.
+     * 检查组件是否已停止
+     * @return 如果已停止返回true
      * @see #isStopped()
      */
     boolean isStopped();
 
     /**
-     * @return true if the component has failed to start or has failed to stop.
+     * 检查组件是否失败(启动或停止失败)
+     * @return 如果失败返回true
      */
     boolean isFailed();
 
     /**
-     * @return current state
+     * 获取当前部署状态
+     * @return 当前部署状态
      */
     DeployState getState();
 
+    /**
+     * 添加部署监听器
+     * @param listener 要添加的监听器
+     */
     void addDeployListener(DeployListener<E> listener);
 
+    /**
+     * 移除部署监听器
+     * @param listener 要移除的监听器
+     */
     void removeDeployListener(DeployListener<E> listener);
-
 }

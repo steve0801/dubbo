@@ -22,13 +22,17 @@ import java.io.Writer;
 /**
  * Thread-unsafe StringWriter.
  */
+// 非线程安全的字符串写入器实现
 public class UnsafeStringWriter extends Writer {
+    // 内部字符串缓冲区
     private StringBuilder mBuffer;
 
+    // 默认构造函数，初始化缓冲区
     public UnsafeStringWriter() {
         lock = mBuffer = new StringBuilder();
     }
 
+    // 指定初始大小的构造函数
     public UnsafeStringWriter(int size) {
         if (size < 0) {
             throw new IllegalArgumentException("Negative buffer size");
@@ -37,16 +41,19 @@ public class UnsafeStringWriter extends Writer {
         lock = mBuffer = new StringBuilder();
     }
 
+    // 写入单个字符
     @Override
     public void write(int c) {
         mBuffer.append((char) c);
     }
 
+    // 写入字符数组
     @Override
     public void write(char[] cs) throws IOException {
         mBuffer.append(cs, 0, cs.length);
     }
 
+    // 写入字符数组的指定部分
     @Override
     public void write(char[] cs, int off, int len) throws IOException {
         if ((off < 0) || (off > cs.length) || (len < 0) ||
@@ -59,16 +66,19 @@ public class UnsafeStringWriter extends Writer {
         }
     }
 
+    // 写入字符串
     @Override
     public void write(String str) {
         mBuffer.append(str);
     }
 
+    // 写入字符串的指定部分
     @Override
     public void write(String str, int off, int len) {
         mBuffer.append(str, off, off + len);
     }
 
+    // 追加字符序列
     @Override
     public Writer append(CharSequence csq) {
         if (csq == null) {
@@ -79,6 +89,7 @@ public class UnsafeStringWriter extends Writer {
         return this;
     }
 
+    // 追加字符序列的指定部分
     @Override
     public Writer append(CharSequence csq, int start, int end) {
         CharSequence cs = (csq == null ? "null" : csq);
@@ -86,20 +97,24 @@ public class UnsafeStringWriter extends Writer {
         return this;
     }
 
+    // 追加单个字符
     @Override
     public Writer append(char c) {
         mBuffer.append(c);
         return this;
     }
 
+    // 关闭写入器(空实现)
     @Override
     public void close() {
     }
 
+    // 刷新缓冲区(空实现)
     @Override
     public void flush() {
     }
 
+    // 获取缓冲区内容字符串
     @Override
     public String toString() {
         return mBuffer.toString();

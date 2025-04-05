@@ -33,43 +33,40 @@ import static org.apache.dubbo.common.utils.TypeUtils.findActualTypeArgument;
  * @param <S> The source type
  * @since 2.7.6
  */
+// 多值转换器接口，支持SPI扩展机制
 @SPI(scope = ExtensionScope.FRAMEWORK)
 public interface MultiValueConverter<S> extends Prioritized {
 
     /**
-     * Accept the source type and target type or not
-     *
-     * @param sourceType     the source type
-     * @param multiValueType the multi-value type
-     * @return if accepted, return <code>true</code>, or <code>false</code>
+     * 判断是否接受指定的源类型和目标类型
+     * @param sourceType     源类型
+     * @param multiValueType 多值类型
+     * @return 如果接受返回true，否则返回false
      */
     boolean accept(Class<S> sourceType, Class<?> multiValueType);
 
     /**
-     * Convert the source to be the multiple value
-     *
-     * @param source         the source-typed value
-     * @param multiValueType the multi-value type
-     * @param elementType    the element type
-     * @return
+     * 将源值转换为多值类型
+     * @param source         源值
+     * @param multiValueType 目标多值类型
+     * @param elementType    元素类型
+     * @return 转换后的多值对象
      */
     Object convert(S source, Class<?> multiValueType, Class<?> elementType);
 
     /**
-     * Get the source type
-     *
-     * @return non-null
+     * 获取源类型
+     * @return 非空的源类型
      */
     default Class<S> getSourceType() {
         return findActualTypeArgument(getClass(), MultiValueConverter.class, 0);
     }
 
     /**
-     * Find the {@link MultiValueConverter} instance from {@link ExtensionLoader} with the specified source and target type
-     *
-     * @param sourceType the source type
-     * @param targetType the target type
-     * @return <code>null</code> if not found
+     * 从ExtensionLoader中查找匹配的MultiValueConverter实例
+     * @param sourceType 源类型
+     * @param targetType 目标类型
+     * @return 找到的转换器实例，未找到返回null
      * @see ExtensionLoader#getSupportedExtensionInstances()
      * @since 2.7.8
      */
@@ -82,6 +79,14 @@ public interface MultiValueConverter<S> extends Prioritized {
                 .orElse(null);
     }
 
+    /**
+     * 如果可能，将源对象转换为指定的多值类型
+     * @param source        源对象
+     * @param multiValueType 目标多值类型
+     * @param elementType   元素类型
+     * @param <T>          目标类型
+     * @return 转换后的对象，无法转换返回null
+     */
     static <T> T convertIfPossible(Object source, Class<?> multiValueType, Class<?> elementType) {
         Class<?> sourceType = source.getClass();
         MultiValueConverter converter = find(sourceType, multiValueType);

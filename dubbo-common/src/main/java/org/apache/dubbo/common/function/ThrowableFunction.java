@@ -27,24 +27,23 @@ import java.util.function.Function;
  * @see Throwable
  * @since 2.7.5
  */
+// 可抛出异常的函数式接口
 @FunctionalInterface
 public interface ThrowableFunction<T, R> {
 
     /**
-     * Applies this function to the given argument.
-     *
-     * @param t the function argument
-     * @return the function result
-     * @throws Throwable if met with any error
+     * 对给定参数应用此函数
+     * @param t 函数参数
+     * @return 函数结果
+     * @throws Throwable 执行过程中遇到的错误
      */
     R apply(T t) throws Throwable;
 
     /**
-     * Executes {@link ThrowableFunction}
-     *
-     * @param t the function argument
-     * @return the function result
-     * @throws RuntimeException wrappers {@link Throwable}
+     * 执行ThrowableFunction
+     * @param t 函数参数
+     * @return 函数结果
+     * @throws RuntimeException 包装Throwable异常
      */
     default R execute(T t) throws RuntimeException {
         R result = null;
@@ -57,13 +56,12 @@ public interface ThrowableFunction<T, R> {
     }
 
     /**
-     * Executes {@link ThrowableFunction}
-     *
-     * @param t        the function argument
-     * @param function {@link ThrowableFunction}
-     * @param <T>      the source type
-     * @param <R>      the return type
-     * @return the result after execution
+     * 执行ThrowableFunction
+     * @param t 函数参数
+     * @param function ThrowableFunction实例
+     * @param <T> 源类型
+     * @param <R> 返回类型
+     * @return 执行后的结果
      */
     static <T, R> R execute(T t, ThrowableFunction<T, R> function) {
         return function.execute(t);

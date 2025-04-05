@@ -27,35 +27,38 @@ import static org.apache.dubbo.common.utils.StringUtils.split;
  * @see MultiValueConverter
  * @since 2.7.6
  */
+// 字符串到多值类型的转换器接口
 public interface StringToMultiValueConverter extends MultiValueConverter<String> {
 
+    // 默认实现：将字符串转换为多值对象
     @Override
     default Object convert(String source, Class<?> multiValueType, Class<?> elementType) {
-
+        // 如果源字符串为空则返回null
         if (isEmpty(source)) {
             return null;
         }
 
-        // split by the comma
+        // 按逗号分割字符串
         String[] segments = split(source, ',');
 
-        if (ArrayUtils.isEmpty(segments)) { // If empty array, create an array with only one element
+        // 如果分割后为空数组，则创建一个包含原始字符串的单元素数组
+        if (ArrayUtils.isEmpty(segments)) {
             segments = new String[]{source};
         }
 
         int size = segments.length;
 
+        // 调用具体实现方法进行转换
         return convert(segments, size, multiValueType, elementType);
     }
 
     /**
-     * Convert the segments to multiple value object
-     *
-     * @param segments    the String array of content
-     * @param size        the size of multiple value object
-     * @param targetType  the target type
-     * @param elementType the element type
-     * @return multiple value object
+     * 将字符串数组转换为多值对象
+     * @param segments    字符串数组
+     * @param size       多值对象的大小
+     * @param targetType  目标类型
+     * @param elementType 元素类型
+     * @return 转换后的多值对象
      */
     Object convert(String[] segments, int size, Class<?> targetType, Class<?> elementType);
 }

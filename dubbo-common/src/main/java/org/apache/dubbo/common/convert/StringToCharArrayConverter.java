@@ -26,14 +26,17 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
  */
 public class StringToCharArrayConverter implements StringConverter<char[]> {
 
+    // 将字符串转换为字符数组
     @Override
     public char[] convert(String source) {
+        // 如果字符串不为空则转换为字符数组，否则返回null
         return isNotEmpty(source) ? source.toCharArray() : null;
     }
 
-
+    // 获取转换器优先级
     @Override
     public int getPriority() {
+        // 返回普通优先级+7
         return NORMAL_PRIORITY + 7;
     }
 }

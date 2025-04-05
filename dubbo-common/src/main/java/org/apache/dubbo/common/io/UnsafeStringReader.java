@@ -22,17 +22,21 @@ import java.io.Reader;
 /**
  * Thread-unsafe StringReader.
  */
+// 非线程安全的字符串读取器实现
 public class UnsafeStringReader extends Reader {
+    // 存储要读取的字符串
     private String mString;
-
+    // 当前位置、限制位置和标记位置
     private int mPosition, mLimit, mMark;
 
+    // 构造函数，初始化字符串读取器
     public UnsafeStringReader(String str) {
         mString = str;
         mLimit = str.length();
         mPosition = mMark = 0;
     }
 
+    // 读取单个字符
     @Override
     public int read() throws IOException {
         ensureOpen();
@@ -43,11 +47,13 @@ public class UnsafeStringReader extends Reader {
         return mString.charAt(mPosition++);
     }
 
+    // 读取字符到数组
     @Override
     public int read(char[] cs, int off, int len) throws IOException {
         ensureOpen();
+        // 参数校验
         if ((off < 0) || (off > cs.length) || (len < 0) ||
-                ((off + len) > cs.length) || ((off + len) < 0)) {
+            ((off + len) > cs.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -59,12 +65,14 @@ public class UnsafeStringReader extends Reader {
             return -1;
         }
 
+        // 计算实际可读取的字符数
         int n = Math.min(mLimit - mPosition, len);
         mString.getChars(mPosition, mPosition + n, cs, off);
         mPosition += n;
         return n;
     }
 
+    // 跳过指定数量的字符
     @Override
     public long skip(long ns) throws IOException {
         ensureOpen();
@@ -72,23 +80,27 @@ public class UnsafeStringReader extends Reader {
             return 0;
         }
 
+        // 计算实际可跳过的字符数
         long n = Math.min(mLimit - mPosition, ns);
         n = Math.max(-mPosition, n);
         mPosition += n;
         return n;
     }
 
+    // 检查流是否准备好读取
     @Override
     public boolean ready() throws IOException {
         ensureOpen();
         return true;
     }
 
+    // 是否支持标记功能
     @Override
     public boolean markSupported() {
         return true;
     }
 
+    // 设置标记位置
     @Override
     public void mark(int readAheadLimit) throws IOException {
         if (readAheadLimit < 0) {
@@ -99,20 +111,24 @@ public class UnsafeStringReader extends Reader {
         mMark = mPosition;
     }
 
+    // 重置到标记位置
     @Override
     public void reset() throws IOException {
         ensureOpen();
         mPosition = mMark;
     }
 
+    // 关闭流
     @Override
     public void close() throws IOException {
         mString = null;
     }
 
+    // 确保流已打开
     private void ensureOpen() throws IOException {
         if (mString == null) {
             throw new IOException("Stream closed");
         }
     }
 }
+

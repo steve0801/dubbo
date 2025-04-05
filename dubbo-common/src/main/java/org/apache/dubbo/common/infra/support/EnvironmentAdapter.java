@@ -32,24 +32,31 @@ import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_LABELS;
 import static org.apache.dubbo.common.constants.CommonConstants.EQUAL_SPLIT_PATTERN;
 import static org.apache.dubbo.common.constants.CommonConstants.SEMICOLON_SPLIT_PATTERN;
 
+// 环境适配器，用于获取环境变量和系统属性
 @Activate
 public class EnvironmentAdapter implements InfraAdapter, ScopeModelAware {
 
+    // 应用模型实例
     private ApplicationModel applicationModel;
 
+    // 设置应用模型
     @Override
     public void setApplicationModel(ApplicationModel applicationModel) {
         this.applicationModel = applicationModel;
     }
 
     /**
-     * 1. OS Environment: DUBBO_LABELS=tag=pre;key=value
-     * 2. JVM Options: -Denv_keys = DUBBO_KEY1, DUBBO_KEY2
+     * 获取额外属性
+     * 1. 从系统环境变量获取: DUBBO_LABELS=tag=pre;key=value
+     * 2. 从JVM参数获取: -Denv_keys = DUBBO_KEY1, DUBBO_KEY2
+     * @param params 输入参数
+     * @return 返回属性键值对
      */
     @Override
     public Map<String, String> getExtraAttributes(Map<String, String> params) {
         Map<String, String> parameters = new HashMap<>();
 
+        // 处理DUBBO_LABELS格式的环境变量
         String rawLabels = ConfigurationUtils.getProperty(applicationModel, DUBBO_LABELS);
         if (StringUtils.isNotEmpty(rawLabels)) {
             String[] labelPairs = SEMICOLON_SPLIT_PATTERN.split(rawLabels);
@@ -61,6 +68,7 @@ public class EnvironmentAdapter implements InfraAdapter, ScopeModelAware {
             }
         }
 
+        // 处理DUBBO_ENV_KEYS格式的JVM参数
         String rawKeys = ConfigurationUtils.getProperty(applicationModel, DUBBO_ENV_KEYS);
         if (StringUtils.isNotEmpty(rawKeys)) {
             String[] keys = COMMA_SPLIT_PATTERN.split(rawKeys);
@@ -74,6 +82,7 @@ public class EnvironmentAdapter implements InfraAdapter, ScopeModelAware {
         return parameters;
     }
 
+    // 获取指定key的属性值
     @Override
     public String getAttribute(String key) {
         return ConfigurationUtils.getProperty(applicationModel, key);

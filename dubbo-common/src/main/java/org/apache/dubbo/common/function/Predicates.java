@@ -25,47 +25,45 @@ import static java.util.stream.Stream.of;
  *
  * @since 2.7.5
  */
+// 谓词工具类，提供常用的谓词操作
 public interface Predicates {
 
+    // 空谓词数组常量
     Predicate[] EMPTY_ARRAY = new Predicate[0];
 
     /**
-     * {@link Predicate} always return <code>true</code>
-     *
-     * @param <T> the type to test
-     * @return <code>true</code>
+     * 总是返回true的谓词
+     * @param <T> 测试类型
+     * @return 总是返回true的谓词
      */
     static <T> Predicate<T> alwaysTrue() {
         return e -> true;
     }
 
     /**
-     * {@link Predicate} always return <code>false</code>
-     *
-     * @param <T> the type to test
-     * @return <code>false</code>
+     * 总是返回false的谓词
+     * @param <T> 测试类型
+     * @return 总是返回false的谓词
      */
     static <T> Predicate<T> alwaysFalse() {
         return e -> false;
     }
 
     /**
-     * a composed predicate that represents a short-circuiting logical AND of {@link Predicate predicates}
-     *
-     * @param predicates {@link Predicate predicates}
-     * @param <T>        the type to test
-     * @return non-null
+     * 多个谓词的逻辑与组合(短路与)
+     * @param predicates 要组合的谓词数组
+     * @param <T> 测试类型
+     * @return 组合后的谓词
      */
     static <T> Predicate<T> and(Predicate<T>... predicates) {
         return of(predicates).reduce((a, b) -> a.and(b)).orElseGet(Predicates::alwaysTrue);
     }
 
     /**
-     * a composed predicate that represents a short-circuiting logical OR of {@link Predicate predicates}
-     *
-     * @param predicates {@link Predicate predicates}
-     * @param <T>        the detected type
-     * @return non-null
+     * 多个谓词的逻辑或组合(短路或)
+     * @param predicates 要组合的谓词数组
+     * @param <T> 测试类型
+     * @return 组合后的谓词
      */
     static <T> Predicate<T> or(Predicate<T>... predicates) {
         return of(predicates).reduce((a, b) -> a.or(b)).orElse(e -> true);

@@ -16,7 +16,6 @@
  */
 package org.apache.dubbo.common.convert;
 
-import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.extension.ExtensionScope;
 import org.apache.dubbo.common.extension.SPI;
 import org.apache.dubbo.common.lang.Prioritized;
@@ -32,55 +31,30 @@ import static org.apache.dubbo.common.utils.TypeUtils.findActualTypeArgument;
  * @param <T> The target type
  * @since 2.7.6
  */
+// 转换器接口，支持SPI扩展机制
 @SPI(scope = ExtensionScope.FRAMEWORK)
 @FunctionalInterface
 public interface Converter<S, T> extends Prioritized {
 
-    /**
-     * Accept the source type and target type or not
-     *
-     * @param sourceType the source type
-     * @param targetType the target type
-     * @return if accepted, return <code>true</code>, or <code>false</code>
-     */
+    // 判断是否接受指定的源类型和目标类型
     default boolean accept(Class<?> sourceType, Class<?> targetType) {
         return isAssignableFrom(sourceType, getSourceType()) && isAssignableFrom(targetType, getTargetType());
     }
 
-    /**
-     * Convert the source-typed value to the target-typed value
-     *
-     * @param source the source-typed value
-     * @return the target-typed value
-     */
+    // 将源类型值转换为目标类型值
     T convert(S source);
 
-    /**
-     * Get the source type
-     *
-     * @return non-null
-     */
+    // 获取源类型
     default Class<S> getSourceType() {
         return findActualTypeArgument(getClass(), Converter.class, 0);
     }
 
-    /**
-     * Get the target type
-     *
-     * @return non-null
-     */
+    // 获取目标类型
     default Class<T> getTargetType() {
         return findActualTypeArgument(getClass(), Converter.class, 1);
     }
 
-    /**
-     * Get the Converter instance from {@link ExtensionLoader} with the specified source and target type
-     *
-     * @param sourceType the source type
-     * @param targetType the target type
-     * @return
-     * @see ExtensionLoader#getSupportedExtensionInstances()
-     */
+    // 根据源类型和目标类型获取转换器实例
     static Converter<?, ?> getConverter(Class<?> sourceType, Class<?> targetType) {
         return getExtensionLoader(Converter.class)
                 .getSupportedExtensionInstances()
@@ -90,15 +64,7 @@ public interface Converter<S, T> extends Prioritized {
                 .orElse(null);
     }
 
-    /**
-     * Convert the value of source to target-type value if possible
-     *
-     * @param source     the value of source
-     * @param targetType the target type
-     * @param <T>        the target type
-     * @return <code>null</code> if can't be converted
-     * @since 2.7.8
-     */
+    // 如果可能，将源值转换为目标类型值
     static <T> T convertIfPossible(Object source, Class<T> targetType) {
         Converter converter = getConverter(source.getClass(), targetType);
         if (converter != null) {
@@ -107,3 +73,4 @@ public interface Converter<S, T> extends Prioritized {
         return null;
     }
 }
+

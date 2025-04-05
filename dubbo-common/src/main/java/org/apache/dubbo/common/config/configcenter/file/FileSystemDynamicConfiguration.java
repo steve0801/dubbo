@@ -77,39 +77,37 @@ import static org.apache.commons.io.FileUtils.readFileToString;
  */
 public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration {
 
+    // 配置文件目录参数名
     public static final String CONFIG_CENTER_DIR_PARAM_NAME = PARAM_NAME_PREFIX + "dir";
 
+    // 文件编码参数名
     public static final String CONFIG_CENTER_ENCODING_PARAM_NAME = PARAM_NAME_PREFIX + "encoding";
 
+    // 默认配置文件目录路径
     public static final String DEFAULT_CONFIG_CENTER_DIR_PATH = System.getProperty("user.home") + File.separator
             + ".dubbo" + File.separator + "config-center";
 
+    // 默认线程池大小
     public static final int DEFAULT_THREAD_POOL_SIZE = 1;
 
+    // 默认文件编码
     public static final String DEFAULT_CONFIG_CENTER_ENCODING = "UTF-8";
 
+    // 关注的路径事件类型
     private static final WatchEvent.Kind[] INTEREST_PATH_KINDS = of(ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 
-    /**
-     * The class name of {@linkplain sun.nio.fs.PollingWatchService}
-     */
+    // PollingWatchService类名
     private static final String POLLING_WATCH_SERVICE_CLASS_NAME = "sun.nio.fs.PollingWatchService";
 
+    // 线程池大小
     private static final int THREAD_POOL_SIZE = 1;
 
-    /**
-     * Logger
-     */
+    // 日志记录器
     private static final Log logger = LogFactory.getLog(FileSystemDynamicConfiguration.class);
 
-
-    /**
-     * The unmodifiable map for {@link ConfigChangeType} whose key is the {@link WatchEvent.Kind#name() name} of
-     * {@link WatchEvent.Kind WatchEvent's Kind}
-     */
+    // 配置变更类型映射表
     private static final Map<String, ConfigChangeType> CONFIG_CHANGE_TYPES_MAP =
             unmodifiableMap(new HashMap<String, ConfigChangeType>() {
-                // Initializes the elements that is mapping ConfigChangeType
                 {
                     put(ENTRY_CREATE.name(), ConfigChangeType.ADDED);
                     put(ENTRY_DELETE.name(), ConfigChangeType.DELETED);
@@ -117,31 +115,22 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
                 }
             });
 
+    // WatchService实例
     private static final Optional<WatchService> watchService;
 
-    /**
-     * Is Pooling Based Watch Service
-     *
-     * @see #detectPoolingBasedWatchService(Optional)
-     */
+    // 是否基于轮询的WatchService
     private static final boolean BASED_POOLING_WATCH_SERVICE;
 
+    // WatchEvent修饰符
     private static final WatchEvent.Modifier[] MODIFIERS;
 
-    /**
-     * the delay to action in seconds. If null, execute indirectly
-     */
+    // 延迟执行时间(秒)
     private static final Integer DELAY;
 
-    /**
-     * The thread pool for {@link WatchEvent WatchEvents} loop
-     * It's optional if there is not any {@link ConfigurationListener} registration
-     *
-     * @see ThreadPoolExecutor
-     */
+    // Watch事件循环线程池
     private static final ThreadPoolExecutor WATCH_EVENTS_LOOP_THREAD_POOL;
 
-    // static initialization
+    // 静态初始化块
     static {
         watchService = newWatchService();
         BASED_POOLING_WATCH_SERVICE = detectPoolingBasedWatchService(watchService);
@@ -150,48 +139,51 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         WATCH_EVENTS_LOOP_THREAD_POOL = newWatchEventsLoopThreadPool();
     }
 
-    /**
-     * The Root Directory for config center
-     */
+    // 配置中心根目录
     private final File rootDirectory;
 
+    // 文件编码
     private final String encoding;
 
-    /**
-     * The {@link Set} of {@link #groupDirectory(String) directories} that may be processing,
-     * <p>
-     * if {@link #isBasedPoolingWatchService()} is <code>false</code>, this properties will be
-     * {@link Collections#emptySet() empty}
-     *
-     * @see #initProcessingDirectories()
-     */
+    // 正在处理的目录集合
     private final Set<File> processingDirectories;
 
+    // 监听器仓库
     private final Map<File, List<ConfigurationListener>> listenersRepository;
+
+    // 作用域模型
     private ScopeModel scopeModel;
+
+    // 是否已注册关闭钩子
     private AtomicBoolean hasRegisteredShutdownHook = new AtomicBoolean();
 
+    // 默认构造函数
     public FileSystemDynamicConfiguration() {
         this(new File(DEFAULT_CONFIG_CENTER_DIR_PATH));
     }
 
+    // 带根目录参数的构造函数
     public FileSystemDynamicConfiguration(File rootDirectory) {
         this(rootDirectory, DEFAULT_CONFIG_CENTER_ENCODING);
     }
 
+    // 带根目录和编码参数的构造函数
     public FileSystemDynamicConfiguration(File rootDirectory, String encoding) {
         this(rootDirectory, encoding, DEFAULT_THREAD_POOL_PREFIX);
     }
 
+    // 带根目录、编码和线程池前缀参数的构造函数
     public FileSystemDynamicConfiguration(File rootDirectory, String encoding, String threadPoolPrefixName) {
         this(rootDirectory, encoding, threadPoolPrefixName, DEFAULT_THREAD_POOL_SIZE);
     }
 
+    // 带根目录、编码、线程池前缀和大小参数的构造函数
     public FileSystemDynamicConfiguration(File rootDirectory, String encoding, String threadPoolPrefixName,
                                           int threadPoolSize) {
         this(rootDirectory, encoding, threadPoolPrefixName, threadPoolSize, DEFAULT_THREAD_POOL_KEEP_ALIVE_TIME);
     }
 
+    // 带根目录、编码、线程池前缀、大小和存活时间参数的构造函数
     public FileSystemDynamicConfiguration(File rootDirectory, String encoding,
                                           String threadPoolPrefixName,
                                           int threadPoolSize,
@@ -204,6 +196,7 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         registerDubboShutdownHook();
     }
 
+    // 带作用域模型的构造函数
     public FileSystemDynamicConfiguration(File rootDirectory, String encoding,
                                           String threadPoolPrefixName,
                                           int threadPoolSize,
@@ -218,24 +211,27 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         registerDubboShutdownHook();
     }
 
+    // 带URL参数的构造函数
     public FileSystemDynamicConfiguration(URL url) {
         this(initDirectory(url), getEncoding(url), getThreadPoolPrefixName(url), getThreadPoolSize(url),
                 getThreadPoolKeepAliveTime(url), url.getScopeModel());
     }
 
+    // 初始化处理目录集合
     private Set<File> initProcessingDirectories() {
         return isBasedPoolingWatchService() ? new LinkedHashSet<>() : emptySet();
     }
 
+    // 获取配置文件对象
     public File configFile(String key, String group) {
         return new File(buildPathKey(group, key));
     }
 
+    // 在监听器中执行操作
     private void doInListener(String configFilePath, BiConsumer<File, List<ConfigurationListener>> consumer) {
         watchService.ifPresent(watchService -> {
             File configFile = new File(configFilePath);
             executeMutually(configFile.getParentFile(), () -> {
-                // process the WatchEvents if not start
                 if (!isProcessingWatchEvents()) {
                     processWatchEvents(watchService);
                 }
@@ -243,17 +239,12 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
                 List<ConfigurationListener> listeners = getListeners(configFile);
                 consumer.accept(configFile, listeners);
 
-                // Nothing to return
                 return null;
             });
         });
     }
 
-    /**
-     * Register the Dubbo ShutdownHook
-     *
-     * @since 2.7.8
-     */
+    // 注册Dubbo关闭钩子
     private void registerDubboShutdownHook() {
         if (!hasRegisteredShutdownHook.compareAndSet(false, true)) {
             return;
@@ -271,17 +262,14 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         });
     }
 
+    // 判断是否正在处理Watch事件
     private static boolean isProcessingWatchEvents() {
         return getWatchEventsLoopThreadPool().getActiveCount() > 0;
     }
 
-    /**
-     * Process the {@link WatchEvent WatchEvents} loop in async execution
-     *
-     * @param watchService {@link WatchService}
-     */
+    // 处理Watch事件循环
     private void processWatchEvents(WatchService watchService) {
-        getWatchEventsLoopThreadPool().execute(() -> { // WatchEvents Loop
+        getWatchEventsLoopThreadPool().execute(() -> {
             while (true) {
                 WatchKey watchKey = null;
                 try {
@@ -289,7 +277,6 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
                     if (watchKey.isValid()) {
                         for (WatchEvent event : watchKey.pollEvents()) {
                             WatchEvent.Kind kind = event.kind();
-                            // configChangeType's key to match WatchEvent's Kind
                             ConfigChangeType configChangeType = CONFIG_CHANGE_TYPES_MAP.get(kind.name());
                             if (configChangeType != null) {
                                 Path configDirectoryPath = (Path) watchKey.watchable();
@@ -308,7 +295,6 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
                     return;
                 } finally {
                     if (watchKey != null) {
-                        // reset
                         watchKey.reset();
                     }
                 }
@@ -316,11 +302,10 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         });
     }
 
+    // 通知配置目录
     private void signalConfigDirectory(File configDirectory) {
         if (isBasedPoolingWatchService()) {
-            // remove configDirectory from processing set because it's done
             removeProcessingDirectory(configDirectory);
-            // notify configDirectory
             notifyProcessingDirectory(configDirectory);
             if (logger.isDebugEnabled()) {
                 logger.debug(format("The config rootDirectory[%s] is signalled...", configDirectory.getName()));
@@ -328,22 +313,25 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         }
     }
 
+    // 从处理目录集合中移除目录
     private void removeProcessingDirectory(File configDirectory) {
         processingDirectories.remove(configDirectory);
     }
 
+    // 通知处理目录
     private void notifyProcessingDirectory(File configDirectory) {
         configDirectory.notifyAll();
     }
 
+    // 获取监听器列表
     private List<ConfigurationListener> getListeners(File configFile) {
         return listenersRepository.computeIfAbsent(configFile, p -> new LinkedList<>());
     }
 
+    // 触发配置变更事件
     private void fireConfigChangeEvent(File configDirectory, File configFile, ConfigChangeType configChangeType) {
         String key = configFile.getName();
         String value = getConfig(configFile);
-        // fire ConfigChangeEvent one by one
         getListeners(configFile).forEach(listener -> {
             try {
                 listener.process(new ConfigChangedEvent(key, configDirectory.getName(), value, configChangeType));
@@ -355,6 +343,7 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         });
     }
 
+    // 判断文件是否可读
     private boolean canRead(File file) {
         return file.exists() && file.canRead();
     }
@@ -403,18 +392,15 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
     @Override
     protected void doAddListener(String pathKey, ConfigurationListener listener) {
         doInListener(pathKey, (configFilePath, listeners) -> {
-            if (listeners.isEmpty()) { // If no element, it indicates watchService was registered before
+            if (listeners.isEmpty()) {
                 ThrowableConsumer.execute(configFilePath, configFile -> {
                     FileUtils.forceMkdirParent(configFile);
-                    // A rootDirectory to be watched
                     File configDirectory = configFile.getParentFile();
                     if (configDirectory != null) {
-                        // Register the configDirectory
                         configDirectory.toPath().register(watchService.get(), INTEREST_PATH_KINDS, MODIFIERS);
                     }
                 });
             }
-            // Add into cache
             listeners.add(listener);
         });
     }
@@ -422,29 +408,19 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
     @Override
     protected void doRemoveListener(String pathKey, ConfigurationListener listener) {
         doInListener(pathKey, (file, listeners) -> {
-            // Remove into cache
             listeners.remove(listener);
         });
     }
 
-    /**
-     * Delay action for {@link #configFile(String, String) config file}
-     *
-     * @param configFilePath the key to represent a configuration
-     * @param function       the customized {@link Function function} with {@link File}
-     * @param <V>            the computed value
-     * @return
-     */
+    // 延迟执行操作
     protected <V> V delay(String configFilePath, ThrowableFunction<File, V> function) {
         File configFile = new File(configFilePath);
-        // Must be based on PoolingWatchService and has listeners under config file
         if (isBasedPoolingWatchService()) {
             File configDirectory = configFile.getParentFile();
             executeMutually(configDirectory, () -> {
                 if (hasListeners(configFile) && isProcessing(configDirectory)) {
                     Integer delay = getDelay();
                     if (delay != null) {
-                        // wait for delay in seconds
                         long timeout = SECONDS.toMillis(delay);
                         if (logger.isDebugEnabled()) {
                             logger.debug(format("The config[path : %s] is about to delay in %d ms.",
@@ -459,7 +435,6 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         }
 
         V value = null;
-
         try {
             value = function.apply(configFile);
         } catch (Throwable e) {
@@ -467,28 +442,25 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
                 logger.error(e.getMessage(), e);
             }
         }
-
         return value;
     }
 
+    // 判断是否有监听器
     private boolean hasListeners(File configFile) {
         return getListeners(configFile).size() > 0;
     }
 
-    /**
-     * Is processing on {@link #buildGroupPath(String) config rootDirectory}
-     *
-     * @param configDirectory {@link #buildGroupPath(String) config rootDirectory}
-     * @return if processing , return <code>true</code>, or <code>false</code>
-     */
+    // 判断目录是否正在处理
     private boolean isProcessing(File configDirectory) {
         return processingDirectories.contains(configDirectory);
     }
 
+    // 添加处理目录
     private void addProcessing(File configDirectory) {
         processingDirectories.add(configDirectory);
     }
 
+    // 获取配置组集合
     public Set<String> getConfigGroups() {
         return Stream.of(getRootDirectory().listFiles())
                 .filter(File::isDirectory)
@@ -496,6 +468,7 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
                 .collect(Collectors.toSet());
     }
 
+    // 获取配置文件内容
     protected String getConfig(File configFile) {
         return ThrowableFunction.execute(configFile,
                 file -> canRead(configFile) ? readFileToString(configFile, getEncoding()) : null);
@@ -503,41 +476,39 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
 
     @Override
     protected void doClose() throws Exception {
-
     }
 
+    // 获取根目录
     public File getRootDirectory() {
         return rootDirectory;
     }
 
+    // 获取文件编码
     public String getEncoding() {
         return encoding;
     }
 
+    // 获取延迟时间
     protected Integer getDelay() {
         return DELAY;
     }
 
-    /**
-     * It's whether the implementation of {@link WatchService} is based on {@linkplain sun.nio.fs.PollingWatchService}
-     * or not.
-     * <p>
-     *
-     * @return if based, return <code>true</code>, or <code>false</code>
-     * @see #detectPoolingBasedWatchService(Optional)
-     */
+    // 判断是否基于轮询的WatchService
     protected static boolean isBasedPoolingWatchService() {
         return BASED_POOLING_WATCH_SERVICE;
     }
 
+    // 获取Watch事件循环线程池
     protected static ThreadPoolExecutor getWatchEventsLoopThreadPool() {
         return WATCH_EVENTS_LOOP_THREAD_POOL;
     }
 
+    // 获取工作线程池
     protected ThreadPoolExecutor getWorkersThreadPool() {
         return super.getWorkersThreadPool();
     }
 
+    // 互斥执行操作
     private <V> V executeMutually(final Object mutex, Callable<V> callable) {
         V value = null;
         synchronized (mutex) {
@@ -552,10 +523,12 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         return value;
     }
 
+    // 可变参数辅助方法
     private static <T> T[] of(T... values) {
         return values;
     }
 
+    // 初始化延迟时间
     private static Integer initDelay(WatchEvent.Modifier[] modifiers) {
         if (isBasedPoolingWatchService()) {
             return 2;
@@ -564,25 +537,18 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         }
     }
 
+    // 初始化WatchEvent修饰符
     private static WatchEvent.Modifier[] initWatchEventModifiers() {
         return of();
     }
 
-    /**
-     * Detect the argument of {@link WatchService} is based on {@linkplain sun.nio.fs.PollingWatchService}
-     * or not.
-     * <p>
-     * Some platforms do not provide the native implementation of {@link WatchService}, just use
-     * {@linkplain sun.nio.fs.PollingWatchService} in periodic poll file modifications.
-     *
-     * @param watchService the instance of {@link WatchService}
-     * @return if based, return <code>true</code>, or <code>false</code>
-     */
+    // 检测是否基于轮询的WatchService
     private static boolean detectPoolingBasedWatchService(Optional<WatchService> watchService) {
         String className = watchService.map(Object::getClass).map(Class::getName).orElse(null);
         return POLLING_WATCH_SERVICE_CLASS_NAME.equals(className);
     }
 
+    // 创建新的WatchService
     private static Optional<WatchService> newWatchService() {
         Optional<WatchService> watchService = null;
         FileSystem fileSystem = FileSystems.getDefault();
@@ -597,6 +563,7 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         return watchService;
     }
 
+    // 初始化配置目录
     protected static File initDirectory(URL url) {
         String directoryPath = getParameter(url, CONFIG_CENTER_DIR_PARAM_NAME, url == null ? null : url.getPath());
         File rootDirectory = null;
@@ -604,7 +571,7 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
             rootDirectory = new File("/" + directoryPath);
         }
 
-        if (directoryPath == null || !rootDirectory.exists()) { // If the directory does not exist
+        if (directoryPath == null || !rootDirectory.exists()) {
             rootDirectory = new File(DEFAULT_CONFIG_CENTER_DIR_PATH);
         }
 
@@ -615,11 +582,12 @@ public class FileSystemDynamicConfiguration extends TreePathDynamicConfiguration
         return rootDirectory;
     }
 
+    // 获取文件编码
     protected static String getEncoding(URL url) {
         return getParameter(url, CONFIG_CENTER_ENCODING_PARAM_NAME, DEFAULT_CONFIG_CENTER_ENCODING);
     }
 
-    // TODO 用JUC包的ThreadPoolExecutor
+    // 创建Watch事件循环线程池
     private static ThreadPoolExecutor newWatchEventsLoopThreadPool() {
         return new ThreadPoolExecutor(THREAD_POOL_SIZE, THREAD_POOL_SIZE,
                 0L, MILLISECONDS,

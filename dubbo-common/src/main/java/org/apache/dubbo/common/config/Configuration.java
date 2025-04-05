@@ -25,29 +25,28 @@ import static org.apache.dubbo.common.config.ConfigurationUtils.isEmptyValue;
  */
 public interface Configuration {
     /**
-     * Get a string associated with the given configuration key.
+     * 获取与给定配置键关联的字符串。
      *
-     * @param key The configuration key.
-     * @return The associated string.
+     * @param key 配置键。
+     * @return 关联的字符串。
      */
     default String getString(String key) {
         return convert(String.class, key, null);
     }
 
     /**
-     * Get a string associated with the given configuration key.
-     * If the key doesn't map to an existing object, the default value
-     * is returned.
+     * 获取与给定配置键关联的字符串。
+     * 如果键没有映射到现有对象，则返回默认值。
      *
-     * @param key          The configuration key.
-     * @param defaultValue The default value.
-     * @return The associated string if key is found and has valid
-     * format, default value otherwise.
+     * @param key          配置键。
+     * @param defaultValue 默认值。
+     * @return 如果找到键并具有有效格式，则返回关联的字符串，否则返回默认值。
      */
     default String getString(String key, String defaultValue) {
         return convert(String.class, key, defaultValue);
     }
 
+    // 获取与给定配置键关联的整数。
     default int getInt(String key) {
         Integer i = this.getInteger(key, (Integer) null);
         if (i != null) {
@@ -57,11 +56,14 @@ public interface Configuration {
         }
     }
 
+    // 获取与给定配置键关联的整数。
+    // 如果键没有映射到现有对象，则返回默认值。
     default int getInt(String key, int defaultValue) {
         Integer i = this.getInteger(key, (Integer) null);
         return i == null ? defaultValue : i;
     }
 
+    // 获取与给定配置键关联的整数对象。
     default Integer getInteger(String key, Integer defaultValue) {
         try {
             return convert(Integer.class, key, defaultValue);
@@ -70,6 +72,7 @@ public interface Configuration {
         }
     }
 
+    // 获取与给定配置键关联的布尔值。
     default boolean getBoolean(String key) {
         Boolean b = this.getBoolean(key, null);
         if (b != null) {
@@ -79,10 +82,13 @@ public interface Configuration {
         }
     }
 
+    // 获取与给定配置键关联的布尔值。
+    // 如果键没有映射到现有对象，则返回默认值。
     default boolean getBoolean(String key, boolean defaultValue) {
         return this.getBoolean(key, toBooleanObject(defaultValue));
     }
 
+    // 获取与给定配置键关联的布尔对象。
     default Boolean getBoolean(String key, Boolean defaultValue) {
         try {
             return convert(Boolean.class, key, defaultValue);
@@ -92,28 +98,21 @@ public interface Configuration {
     }
 
     /**
-     * Gets a property from the configuration. This is the most basic get
-     * method for retrieving values of properties. In a typical implementation
-     * of the {@code Configuration} interface the other get methods (that
-     * return specific data types) will internally make use of this method. On
-     * this level variable substitution is not yet performed. The returned
-     * object is an internal representation of the property value for the passed
-     * in key. It is owned by the {@code Configuration} object. So a caller
-     * should not modify this object. It cannot be guaranteed that this object
-     * will stay constant over time (i.e. further update operations on the
-     * configuration may change its internal state).
+     * 从配置中获取属性。这是检索属性值的最基本的方法。
+     * 在典型的 {@code Configuration} 接口实现中，其他获取方法（返回特定数据类型）将内部使用此方法。
+     * 在这个级别上，变量替换尚未执行。返回的对象是传递的键的属性值的内部表示。
+     * 它由 {@code Configuration} 对象拥有。因此，调用者不应修改此对象。
+     * 不能保证此对象会随着时间保持不变（即对配置的进一步更新操作可能会更改其内部状态）。
      *
-     * @param key property to retrieve
-     * @return the value to which this configuration maps the specified key, or
-     * null if the configuration contains no mapping for this key.
+     * @param key 要检索的属性
+     * @return 此配置映射到指定键的值，如果没有映射则返回 null。
      */
     default Object getProperty(String key) {
         return getProperty(key, null);
     }
 
     /**
-     * Gets a property from the configuration. The default value will return if the configuration doesn't contain
-     * the mapping for the specified key.
+     * 从配置中获取属性。如果配置不包含指定键的映射，则返回默认值。
      *
      * @param key property to retrieve
      * @param defaultValue default value
@@ -125,22 +124,22 @@ public interface Configuration {
         return value != null ? value : defaultValue;
     }
 
+    // 获取内部属性
     Object getInternalProperty(String key);
 
     /**
-     * Check if the configuration contains the specified key.
+     * 检查配置是否包含指定的键。
      *
-     * @param key the key whose presence in this configuration is to be tested
-     * @return {@code true} if the configuration contains a value for this
-     * key, {@code false} otherwise
+     * @param key 要测试的键
+     * @return 如果配置包含此键的值，则返回 {@code true}，否则返回 {@code false}
      */
     default boolean containsKey(String key) {
         return !isEmptyValue(getProperty(key));
     }
 
-
+    // 将配置中的值转换为指定类型的对象
     default <T> T convert(Class<T> cls, String key, T defaultValue) {
-        // we only process String properties for now
+        // 目前我们只处理字符串属性
         String value = (String) getProperty(key);
 
         if (value == null) {
@@ -175,6 +174,7 @@ public interface Configuration {
         return cls.cast(obj);
     }
 
+    // 将布尔值转换为布尔对象
     static Boolean toBooleanObject(boolean bool) {
         return bool ? Boolean.TRUE : Boolean.FALSE;
     }

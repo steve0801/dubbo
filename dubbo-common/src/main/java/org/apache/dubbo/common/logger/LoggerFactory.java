@@ -34,13 +34,17 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Logger factory
  */
+// 日志工厂类，用于获取和管理日志记录器
 public class LoggerFactory {
 
+    // 缓存日志记录器的并发Map
     private static final ConcurrentMap<String, FailsafeLogger> LOGGERS = new ConcurrentHashMap<>();
+    // 当前使用的日志适配器
     private static volatile LoggerAdapter LOGGER_ADAPTER;
 
-    // search common-used logging frameworks
+    // 静态初始化块，初始化日志适配器
     static {
+        // 从系统属性获取指定的日志框架
         String logger = System.getProperty("dubbo.application.logger", "");
         switch (logger) {
             case "slf4j":
@@ -59,6 +63,7 @@ public class LoggerFactory {
                 setLoggerAdapter(new Log4j2LoggerAdapter());
                 break;
             default:
+                // 默认按顺序尝试加载支持的日志框架
                 List<Class<? extends LoggerAdapter>> candidates = Arrays.asList(
                         Log4jLoggerAdapter.class,
                         Slf4jLoggerAdapter.class,
@@ -76,9 +81,11 @@ public class LoggerFactory {
         }
     }
 
+    // 私有构造方法，防止实例化
     private LoggerFactory() {
     }
 
+    // 通过框架模型设置日志适配器
     public static void setLoggerAdapter(FrameworkModel frameworkModel, String loggerAdapter) {
         if (loggerAdapter != null && loggerAdapter.length() > 0) {
             setLoggerAdapter(frameworkModel.getExtensionLoader(LoggerAdapter.class).getExtension(loggerAdapter));
@@ -86,17 +93,18 @@ public class LoggerFactory {
     }
 
     /**
-     * Set logger provider
-     *
-     * @param loggerAdapter logger provider
+     * 设置日志适配器
+     * @param loggerAdapter 日志适配器实例
      */
     public static void setLoggerAdapter(LoggerAdapter loggerAdapter) {
         if (loggerAdapter != null) {
             if (loggerAdapter == LOGGER_ADAPTER) {
                 return;
             }
+            // 初始化适配器
             loggerAdapter.getLogger(LoggerFactory.class.getName());
             LoggerFactory.LOGGER_ADAPTER = loggerAdapter;
+            // 更新所有缓存的日志记录器
             for (Map.Entry<String, FailsafeLogger> entry : LOGGERS.entrySet()) {
                 entry.getValue().setLogger(LOGGER_ADAPTER.getLogger(entry.getKey()));
             }
@@ -104,50 +112,44 @@ public class LoggerFactory {
     }
 
     /**
-     * Get logger provider
-     *
-     * @param key the returned logger will be named after clazz
-     * @return logger
+     * 获取类对应的日志记录器
+     * @param key 类对象
+     * @return 日志记录器实例
      */
     public static Logger getLogger(Class<?> key) {
         return LOGGERS.computeIfAbsent(key.getName(), name -> new FailsafeLogger(LOGGER_ADAPTER.getLogger(name)));
     }
 
     /**
-     * Get logger provider
-     *
-     * @param key the returned logger will be named after key
-     * @return logger provider
+     * 获取名称对应的日志记录器
+     * @param key 日志记录器名称
+     * @return 日志记录器实例
      */
     public static Logger getLogger(String key) {
         return LOGGERS.computeIfAbsent(key, k -> new FailsafeLogger(LOGGER_ADAPTER.getLogger(k)));
     }
 
     /**
-     * Get logging level
-     *
-     * @return logging level
+     * 获取当前日志级别
+     * @return 日志级别
      */
     public static Level getLevel() {
         return LOGGER_ADAPTER.getLevel();
     }
 
     /**
-     * Set the current logging level
-     *
-     * @param level logging level
+     * 设置日志级别
+     * @param level 要设置的日志级别
      */
     public static void setLevel(Level level) {
         LOGGER_ADAPTER.setLevel(level);
     }
 
     /**
-     * Get the current logging file
-     *
-     * @return current logging file
+     * 获取日志文件
+     * @return 日志文件对象
      */
     public static File getFile() {
         return LOGGER_ADAPTER.getFile();
     }
-
 }

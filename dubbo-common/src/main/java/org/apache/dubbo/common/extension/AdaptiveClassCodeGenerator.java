@@ -34,63 +34,79 @@ import java.util.stream.IntStream;
 /**
  * Code generator for Adaptive class
  */
+// 自适应类代码生成器，用于动态生成扩展点的自适应实现类
 public class AdaptiveClassCodeGenerator {
 
+    // 日志记录器
     private static final Logger logger = LoggerFactory.getLogger(AdaptiveClassCodeGenerator.class);
 
+    // Invocation类的全限定名
     private static final String CLASSNAME_INVOCATION = "org.apache.dubbo.rpc.Invocation";
 
+    // 包声明代码模板
     private static final String CODE_PACKAGE = "package %s;\n";
 
+    // 导入声明代码模板
     private static final String CODE_IMPORTS = "import %s;\n";
 
+    // 类声明代码模板
     private static final String CODE_CLASS_DECLARATION = "public class %s$Adaptive implements %s {\n";
 
+    // 方法声明代码模板
     private static final String CODE_METHOD_DECLARATION = "public %s %s(%s) %s {\n%s}\n";
 
+    // 方法参数代码模板
     private static final String CODE_METHOD_ARGUMENT = "%s arg%d";
 
+    // 方法抛出异常代码模板
     private static final String CODE_METHOD_THROWS = "throws %s";
 
+    // 不支持方法代码模板
     private static final String CODE_UNSUPPORTED = "throw new UnsupportedOperationException(\"The method %s of interface %s is not adaptive method!\");\n";
 
+    // URL空检查代码模板
     private static final String CODE_URL_NULL_CHECK = "if (arg%d == null) throw new IllegalArgumentException(\"url == null\");\n%s url = arg%d;\n";
 
+    // 扩展名赋值代码模板
     private static final String CODE_EXT_NAME_ASSIGNMENT = "String extName = %s;\n";
 
+    // 扩展名空检查代码模板
     private static final String CODE_EXT_NAME_NULL_CHECK = "if(extName == null) "
                     + "throw new IllegalStateException(\"Failed to get extension (%s) name from url (\" + url.toString() + \") use keys(%s)\");\n";
 
+    // Invocation参数空检查代码模板
     private static final String CODE_INVOCATION_ARGUMENT_NULL_CHECK = "if (arg%d == null) throw new IllegalArgumentException(\"invocation == null\"); "
                     + "String methodName = arg%d.getMethodName();\n";
 
-
+    // ScopeModel赋值代码模板
     private static final String CODE_SCOPE_MODEL_ASSIGNMENT = "ScopeModel scopeModel = ScopeModelUtil.getOrDefault(url.getScopeModel(), %s.class);\n";
+
+    // 扩展实例赋值代码模板
     private static final String CODE_EXTENSION_ASSIGNMENT = "%s extension = (%<s)scopeModel.getExtensionLoader(%s.class).getExtension(extName);\n";
 
+    // 扩展方法调用参数代码模板
     private static final String CODE_EXTENSION_METHOD_INVOKE_ARGUMENT = "arg%d";
 
+    // 目标接口类型
     private final Class<?> type;
 
+    // 默认扩展名
     private String defaultExtName;
 
+    // 构造函数
     public AdaptiveClassCodeGenerator(Class<?> type, String defaultExtName) {
         this.type = type;
         this.defaultExtName = defaultExtName;
     }
 
-    /**
-     * test if given type has at least one method annotated with <code>Adaptive</code>
-     */
+    // 检查类型是否包含@Adaptive注解的方法
     private boolean hasAdaptiveMethod() {
         return Arrays.stream(type.getMethods()).anyMatch(m -> m.isAnnotationPresent(Adaptive.class));
     }
 
-    /**
-     * generate and return class code
-     */
+    // 生成自适应类代码
     public String generate() {
-        // no need to generate adaptive class since there's no adaptive method found.
+        // 如果没有找到自适应方法则抛出异常
         if (!hasAdaptiveMethod()) {
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName() + ", refuse to create the adaptive class!");
         }
@@ -100,6 +116,7 @@ public class AdaptiveClassCodeGenerator {
         code.append(generateImports());
         code.append(generateClassDeclaration());
 
+        // 为每个方法生成代码
         Method[] methods = type.getMethods();
         for (Method method : methods) {
             code.append(generateMethod(method));
@@ -112,16 +129,12 @@ public class AdaptiveClassCodeGenerator {
         return code.toString();
     }
 
-    /**
-     * generate package info
-     */
+    // 生成包声明
     private String generatePackageInfo() {
         return String.format(CODE_PACKAGE, type.getPackage().getName());
     }
 
-    /**
-     * generate imports
-     */
+    // 生成导入声明
     private String generateImports() {
         StringBuilder builder = new StringBuilder();
         builder.append(String.format(CODE_IMPORTS, ScopeModel.class.getName()));
@@ -129,23 +142,17 @@ public class AdaptiveClassCodeGenerator {
         return builder.toString();
     }
 
-    /**
-     * generate class declaration
-     */
+    // 生成类声明
     private String generateClassDeclaration() {
         return String.format(CODE_CLASS_DECLARATION, type.getSimpleName(), type.getCanonicalName());
     }
 
-    /**
-     * generate method not annotated with Adaptive with throwing unsupported exception
-     */
+    // 生成不支持的方法代码
     private String generateUnsupported(Method method) {
         return String.format(CODE_UNSUPPORTED, method, type.getName());
     }
 
-    /**
-     * get index of parameter with type URL
-     */
+    // 获取URL类型参数的索引
     private int getUrlTypeIndex(Method method) {
         int urlTypeIndex = -1;
         Class<?>[] pts = method.getParameterTypes();
@@ -158,9 +165,7 @@ public class AdaptiveClassCodeGenerator {
         return urlTypeIndex;
     }
 
-    /**
-     * generate method declaration
-     */
+    // 生成方法声明
     private String generateMethod(Method method) {
         String methodReturnType = method.getReturnType().getCanonicalName();
         String methodName = method.getName();
@@ -170,9 +175,7 @@ public class AdaptiveClassCodeGenerator {
         return String.format(CODE_METHOD_DECLARATION, methodReturnType, methodName, methodArgs, methodThrows, methodContent);
     }
 
-    /**
-     * generate method arguments
-     */
+    // 生成方法参数列表
     private String generateMethodArguments(Method method) {
         Class<?>[] pts = method.getParameterTypes();
         return IntStream.range(0, pts.length)
@@ -180,9 +183,7 @@ public class AdaptiveClassCodeGenerator {
                         .collect(Collectors.joining(", "));
     }
 
-    /**
-     * generate method throws
-     */
+    // 生成方法抛出异常声明
     private String generateMethodThrows(Method method) {
         Class<?>[] ets = method.getExceptionTypes();
         if (ets.length > 0) {
@@ -193,16 +194,12 @@ public class AdaptiveClassCodeGenerator {
         }
     }
 
-    /**
-     * generate method URL argument null check
-     */
+    // 生成URL参数空检查代码
     private String generateUrlNullCheck(int index) {
         return String.format(CODE_URL_NULL_CHECK, index, URL.class.getName(), index);
     }
 
-    /**
-     * generate method content
-     */
+    // 生成方法内容
     private String generateMethodContent(Method method) {
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
@@ -211,12 +208,12 @@ public class AdaptiveClassCodeGenerator {
         } else {
             int urlTypeIndex = getUrlTypeIndex(method);
 
-            // found parameter in URL type
+            // 如果找到URL类型参数
             if (urlTypeIndex != -1) {
-                // Null Point check
+                // 生成空指针检查
                 code.append(generateUrlNullCheck(urlTypeIndex));
             } else {
-                // did not find parameter in URL type
+                // 间接获取URL
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
@@ -227,31 +224,27 @@ public class AdaptiveClassCodeGenerator {
             code.append(generateInvocationArgumentNullCheck(method));
 
             code.append(generateExtNameAssignment(value, hasInvocation));
-            // check extName == null?
+            // 检查扩展名是否为空
             code.append(generateExtNameNullCheck(value));
 
             code.append(generateScopeModelAssignment());
             code.append(generateExtensionAssignment());
 
-            // return statement
+            // 生成返回和调用语句
             code.append(generateReturnAndInvocation(method));
         }
 
         return code.toString();
     }
 
-    /**
-     * generate code for variable extName null check
-     */
+    // 生成扩展名空检查代码
     private String generateExtNameNullCheck(String[] value) {
         return String.format(CODE_EXT_NAME_NULL_CHECK, type.getName(), Arrays.toString(value));
     }
 
-    /**
-     * generate extName assigment code
-     */
+    // 生成扩展名赋值代码
     private String generateExtNameAssignment(String[] value, boolean hasInvocation) {
-        // TODO: refactor it
+        // TODO: 需要重构
         String getNameCode = null;
         for (int i = value.length - 1; i >= 0; --i) {
             if (i == value.length - 1) {
@@ -292,20 +285,17 @@ public class AdaptiveClassCodeGenerator {
         return String.format(CODE_EXT_NAME_ASSIGNMENT, getNameCode);
     }
 
-    /**
-     * @return
-     */
+    // 生成ScopeModel赋值代码
     private String generateScopeModelAssignment() {
         return String.format(CODE_SCOPE_MODEL_ASSIGNMENT, type.getName());
     }
 
+    // 生成扩展实例赋值代码
     private String generateExtensionAssignment() {
         return String.format(CODE_EXTENSION_ASSIGNMENT, type.getName(), type.getName());
     }
 
-    /**
-     * generate method invocation statement and return it if necessary
-     */
+    // 生成返回和调用语句
     private String generateReturnAndInvocation(Method method) {
         String returnStatement = method.getReturnType().equals(void.class) ? "" : "return ";
 
@@ -316,17 +306,13 @@ public class AdaptiveClassCodeGenerator {
         return returnStatement + String.format("extension.%s(%s);\n", method.getName(), args);
     }
 
-    /**
-     * test if method has argument of type <code>Invocation</code>
-     */
+    // 检查方法是否包含Invocation类型参数
     private boolean hasInvocationArgument(Method method) {
         Class<?>[] pts = method.getParameterTypes();
         return Arrays.stream(pts).anyMatch(p -> CLASSNAME_INVOCATION.equals(p.getName()));
     }
 
-    /**
-     * generate code to test argument of type <code>Invocation</code> is null
-     */
+    // 生成Invocation参数空检查代码
     private String generateInvocationArgumentNullCheck(Method method) {
         Class<?>[] pts = method.getParameterTypes();
         return IntStream.range(0, pts.length).filter(i -> CLASSNAME_INVOCATION.equals(pts[i].getName()))
@@ -334,12 +320,10 @@ public class AdaptiveClassCodeGenerator {
                         .findFirst().orElse("");
     }
 
-    /**
-     * get value of adaptive annotation or if empty return splitted simple name
-     */
+    // 获取自适应注解的值
     private String[] getMethodAdaptiveValue(Adaptive adaptiveAnnotation) {
         String[] value = adaptiveAnnotation.value();
-        // value is not set, use the value generated from class name as the key
+        // 如果值未设置，使用类名生成的默认值
         if (value.length == 0) {
             String splitName = StringUtils.camelToSplitName(type.getSimpleName(), ".");
             value = new String[]{splitName};
@@ -347,18 +331,12 @@ public class AdaptiveClassCodeGenerator {
         return value;
     }
 
-    /**
-     * get parameter with type <code>URL</code> from method parameter:
-     * <p>
-     * test if parameter has method which returns type <code>URL</code>
-     * <p>
-     * if not found, throws IllegalStateException
-     */
+    // 间接获取URL参数
     private String generateUrlAssignmentIndirectly(Method method) {
         Class<?>[] pts = method.getParameterTypes();
 
         Map<String, Integer> getterReturnUrl = new HashMap<>();
-        // find URL getter method
+        // 查找返回URL的getter方法
         for (int i = 0; i < pts.length; ++i) {
             for (Method m : pts[i].getMethods()) {
                 String name = m.getName();
@@ -373,7 +351,7 @@ public class AdaptiveClassCodeGenerator {
         }
 
         if (getterReturnUrl.size() <= 0) {
-            // getter method not found, throw
+            // 未找到getter方法，抛出异常
             throw new IllegalStateException("Failed to create adaptive class for interface " + type.getName()
                     + ": not found url parameter or url attribute in parameters of method " + method.getName());
         }
@@ -387,13 +365,9 @@ public class AdaptiveClassCodeGenerator {
         }
     }
 
-    /**
-     * 1, test if argi is null
-     * 2, test if argi.getXX() returns null
-     * 3, assign url with argi.getXX()
-     */
+    // 生成获取URL的空检查代码
     private String generateGetUrlNullCheck(int index, Class<?> type, String method) {
-        // Null point check
+        // 空指针检查
         StringBuilder code = new StringBuilder();
         code.append(String.format("if (arg%d == null) throw new IllegalArgumentException(\"%s argument == null\");\n",
                 index, type.getName()));
@@ -403,5 +377,4 @@ public class AdaptiveClassCodeGenerator {
         code.append(String.format("%s url = arg%d.%s();\n", URL.class.getName(), index, method));
         return code.toString();
     }
-
 }

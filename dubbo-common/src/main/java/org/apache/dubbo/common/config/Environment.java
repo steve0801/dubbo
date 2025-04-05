@@ -34,76 +34,103 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+// 定义Environment类，继承自LifecycleAdapter并实现ApplicationExt接口
 public class Environment extends LifecycleAdapter implements ApplicationExt {
+    // 获取Logger实例，用于记录日志
     private static final Logger logger = LoggerFactory.getLogger(Environment.class);
 
+    // 环境的名称
     public static final String NAME = "environment";
 
-    // dubbo properties in classpath
+    // 类路径中的dubbo属性配置
     private PropertiesConfiguration propertiesConfiguration;
 
-    // java system props (-D)
+    // Java系统属性(-D)
     private SystemConfiguration systemConfiguration;
 
-    // java system environment
+    // Java系统环境变量
     private EnvironmentConfiguration environmentConfiguration;
 
-    // external config, such as config-center global/default config
+    // 外部配置，如配置中心全局/默认配置
     private InmemoryConfiguration externalConfiguration;
 
-    // external app config, such as config-center app config
+    // 应用外部配置，例如配置中心应用配置
     private InmemoryConfiguration appExternalConfiguration;
 
-    // local app config , such as Spring Environment/PropertySources/application.properties
+    // 本地应用配置，例如Spring Environment/PropertySources/application.properties
     private InmemoryConfiguration appConfiguration;
 
+    // 全局配置组合
     protected CompositeConfiguration globalConfiguration;
 
+    // 全局配置映射列表
     protected List<Map<String, String>> globalConfigurationMaps;
 
+    // 默认动态全局配置
     private CompositeConfiguration defaultDynamicGlobalConfiguration;
 
+    // 默认动态配置
     private DynamicConfiguration defaultDynamicConfiguration;
 
+    // 本地迁移规则
     private String localMigrationRule;
 
+    // 初始化标志，使用AtomicBoolean确保线程安全
     private AtomicBoolean initialized = new AtomicBoolean(false);
+
+    // 范围模型
     private ScopeModel scopeModel;
 
+    // 构造函数，接收ScopeModel参数
     public Environment(ScopeModel scopeModel) {
         this.scopeModel = scopeModel;
     }
 
+    // 实现initialize方法，初始化环境
     @Override
     public void initialize() throws IllegalStateException {
         if (initialized.compareAndSet(false, true)) {
+            // 根据范围模型初始化PropertiesConfiguration
             this.propertiesConfiguration = new PropertiesConfiguration(scopeModel);
+            // 初始化SystemConfiguration
             this.systemConfiguration = new SystemConfiguration();
+            // 初始化EnvironmentConfiguration
             this.environmentConfiguration = new EnvironmentConfiguration();
+            // 使用"ExternalConfig"作为标识初始化InmemoryConfiguration
             this.externalConfiguration = new InmemoryConfiguration("ExternalConfig");
+            // 使用"AppExternalConfig"作为标识初始化InmemoryConfiguration
             this.appExternalConfiguration = new InmemoryConfiguration("AppExternalConfig");
+            // 使用"AppConfig"作为标识初始化InmemoryConfiguration
             this.appConfiguration = new InmemoryConfiguration("AppConfig");
 
+            // 加载迁移规则
             loadMigrationRule();
         }
     }
 
+    // 加载迁移规则的方法
     private void loadMigrationRule() {
+        // 尝试从系统属性中获取迁移规则路径
         String path = System.getProperty(CommonConstants.DUBBO_MIGRATION_KEY);
         if (path == null || path.length() == 0) {
+            // 如果系统属性中没有，则尝试从环境变量中获取
             path = System.getenv(CommonConstants.DUBBO_MIGRATION_KEY);
             if (path == null || path.length() == 0) {
+                // 如果环境变量也没有设置，则使用默认路径
                 path = CommonConstants.DEFAULT_DUBBO_MIGRATION_FILE;
             }
         }
+        // 根据指定路径加载迁移规则
         this.localMigrationRule = ConfigUtils.loadMigrationRule(scopeModel.getClassLoaders(), path);
     }
 
+    // 设置本地迁移规则（已弃用）
     @Deprecated
     public void setLocalMigrationRule(String localMigrationRule) {
         this.localMigrationRule = localMigrationRule;
     }
 
+    // 设置外部配置映射（禁用注入）
     @DisableInject
     public void setExternalConfigMap(Map<String, String> externalConfiguration) {
         if (externalConfiguration != null) {
@@ -111,6 +138,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
         }
     }
 
+    // 设置应用外部配置映射（禁用注入）
     @DisableInject
     public void setAppExternalConfigMap(Map<String, String> appExternalConfiguration) {
         if (appExternalConfiguration != null) {
@@ -118,6 +146,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
         }
     }
 
+    // 设置应用配置映射（禁用注入）
     @DisableInject
     public void setAppConfigMap(Map<String, String> appConfiguration) {
         if (appConfiguration != null) {
@@ -125,28 +154,33 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
         }
     }
 
+    // 获取外部配置映射
     public Map<String, String> getExternalConfigMap() {
         return externalConfiguration.getProperties();
     }
 
+    // 获取应用外部配置映射
     public Map<String, String> getAppExternalConfigMap() {
         return appExternalConfiguration.getProperties();
     }
 
+    // 获取应用配置映射
     public Map<String, String> getAppConfigMap() {
         return appConfiguration.getProperties();
     }
 
+    // 更新外部配置映射
     public void updateExternalConfigMap(Map<String, String> externalMap) {
         this.externalConfiguration.addProperties(externalMap);
     }
 
+    // 更新应用外部配置映射
     public void updateAppExternalConfigMap(Map<String, String> externalMap) {
         this.appExternalConfiguration.addProperties(externalMap);
     }
 
     /**
-     * Merge target map properties into app configuration
+     * 合并目标映射属性到应用配置
      * @param map
      */
     public void updateAppConfigMap(Map<String, String> map) {
@@ -154,11 +188,11 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     }
 
     /**
-     * At start-up, Dubbo is driven by various configuration, such as Application, Registry, Protocol, etc.
-     * All configurations will be converged into a data bus - URL, and then drive the subsequent process.
+     * 在启动时，Dubbo由各种配置驱动，比如Application、Registry、Protocol等。
+     * 所有配置将被汇聚成一个数据总线 - URL，然后驱动后续流程。
      * <p>
-     * At present, there are many configuration sources, including AbstractConfig (API, XML, annotation), - D, config center, etc.
-     * This method helps us to filter out the most priority values from various configuration sources.
+     * 目前有许多配置源，包括AbstractConfig (API, XML, 注解), -D, 配置中心等。
+     * 此方法帮助我们从多种配置源中筛选出优先级最高的值。
      *
      * @param config
      * @param prefix
@@ -166,7 +200,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
      */
     public Configuration getPrefixedConfiguration(AbstractConfig config, String prefix) {
 
-        // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration  -> AppConfiguration -> AbstractConfig -> PropertiesConfiguration
+        // 序列将会是：SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration  -> AppConfiguration -> AbstractConfig -> PropertiesConfiguration
         Configuration instanceConfiguration = new ConfigConfigurationAdapter(config, prefix);
         CompositeConfiguration compositeConfiguration = new CompositeConfiguration();
         compositeConfiguration.addConfiguration(systemConfiguration);
@@ -181,10 +215,9 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     }
 
     /**
-     * There are two ways to get configuration during exposure / reference or at runtime:
-     * 1. URL, The value in the URL is relatively fixed. we can get value directly.
-     * 2. The configuration exposed in this method is convenient for us to query the latest values from multiple
-     * prioritized sources, it also guarantees that configs changed dynamically can take effect on the fly.
+     * 在暴露/引用或运行时获取配置有两种方式：
+     * 1. URL, URL中的值相对固定。我们可以直接获取值。
+     * 2. 本方法公开的配置便于我们从多个优先级来源查询最新值，同时也保证了动态变更的配置可以即时生效。
      */
     public CompositeConfiguration getConfiguration() {
         if (globalConfiguration == null) {
@@ -201,13 +234,13 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     }
 
     /**
-     * Get configuration map list for target instance
+     * 获取目标实例的配置映射列表
      * @param config
      * @param prefix
      * @return
      */
     public List<Map<String, String>> getConfigurationMaps(AbstractConfig config, String prefix) {
-        // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration  -> AppConfiguration -> AbstractConfig -> PropertiesConfiguration
+        // 序列将会是：SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration  -> AppConfiguration -> AbstractConfig -> PropertiesConfiguration
 
         List<Map<String, String>> maps = new ArrayList<>();
         maps.add(systemConfiguration.getProperties());
@@ -224,7 +257,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     }
 
     /**
-     * Get global configuration as map list
+     * 获取全局配置为映射列表
      * @return
      */
     public List<Map<String, String>> getConfigurationMaps() {
@@ -234,6 +267,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
         return globalConfigurationMaps;
     }
 
+    // 实现destroy方法，销毁环境
     @Override
     public void destroy() throws IllegalStateException {
         initialized.set(false);
@@ -250,46 +284,55 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
     }
 
     /**
-     * Reset environment.
-     * For test only.
+     * 重置环境。
+     * 仅供测试使用。
      */
     public void reset() {
         destroy();
         initialize();
     }
 
+    // 解析占位符
     public String resolvePlaceholders(String str) {
         return ConfigUtils.replaceProperty(str, getConfiguration());
     }
 
+    // 获取PropertiesConfiguration
     public PropertiesConfiguration getPropertiesConfiguration() {
         return propertiesConfiguration;
     }
 
+    // 获取SystemConfiguration
     public SystemConfiguration getSystemConfiguration() {
         return systemConfiguration;
     }
 
+    // 获取EnvironmentConfiguration
     public EnvironmentConfiguration getEnvironmentConfiguration() {
         return environmentConfiguration;
     }
 
+    // 获取外部配置
     public InmemoryConfiguration getExternalConfiguration() {
         return externalConfiguration;
     }
 
+    // 获取应用外部配置
     public InmemoryConfiguration getAppExternalConfiguration() {
         return appExternalConfiguration;
     }
 
+    // 获取应用配置
     public InmemoryConfiguration getAppConfiguration() {
         return appConfiguration;
     }
 
+    // 获取本地迁移规则
     public String getLocalMigrationRule() {
         return localMigrationRule;
     }
 
+    // 刷新类加载器
     public void refreshClassLoaders() {
         propertiesConfiguration.refresh();
         loadMigrationRule();
@@ -298,6 +341,7 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
         this.defaultDynamicGlobalConfiguration = null;
     }
 
+    // 获取动态全局配置
     public Configuration getDynamicGlobalConfiguration() {
         if (defaultDynamicGlobalConfiguration == null) {
             if (defaultDynamicConfiguration == null) {
@@ -313,10 +357,12 @@ public class Environment extends LifecycleAdapter implements ApplicationExt {
         return defaultDynamicGlobalConfiguration;
     }
 
+    // 获取可选的动态配置
     public Optional<DynamicConfiguration> getDynamicConfiguration() {
         return Optional.ofNullable(defaultDynamicConfiguration);
     }
 
+    // 设置动态配置（禁用注入）
     @DisableInject
     public void setDynamicConfiguration(DynamicConfiguration defaultDynamicConfiguration) {
         this.defaultDynamicConfiguration = defaultDynamicConfiguration;

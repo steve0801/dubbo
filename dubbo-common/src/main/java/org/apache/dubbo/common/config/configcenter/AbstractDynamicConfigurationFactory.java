@@ -31,13 +31,18 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_KEY;
  */
 public abstract class AbstractDynamicConfigurationFactory implements DynamicConfigurationFactory {
 
+    // 存储动态配置实例的Map，使用ConcurrentHashMap保证线程安全
     private volatile Map<String, DynamicConfiguration> dynamicConfigurations = new ConcurrentHashMap<>();
 
+    // 获取动态配置实例（线程安全）
     @Override
     public final DynamicConfiguration getDynamicConfiguration(URL url) {
+        // 使用URL作为key，如果URL为空则使用默认key
         String key = url == null ? DEFAULT_KEY : url.toServiceString();
+        // 如果Map中不存在则创建新的配置实例
         return dynamicConfigurations.computeIfAbsent(key, k -> createDynamicConfiguration(url));
     }
 
+    // 抽象方法：创建具体的动态配置实例
     protected abstract DynamicConfiguration createDynamicConfiguration(URL url);
 }

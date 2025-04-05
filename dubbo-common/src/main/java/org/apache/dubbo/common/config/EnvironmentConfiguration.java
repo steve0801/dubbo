@@ -23,18 +23,25 @@ import java.util.Map;
 /**
  * Configuration from system environment
  */
+// 定义EnvironmentConfiguration类，实现Configuration接口
 public class EnvironmentConfiguration implements Configuration {
 
+    // 重写getInternalProperty方法，获取内部属性
     @Override
     public Object getInternalProperty(String key) {
+        // 尝试直接从系统环境变量中获取键对应的值
         String value = System.getenv(key);
         if (StringUtils.isEmpty(value)) {
+            // 如果没有找到，则尝试转换键为操作系统风格的键后再查找
             value = System.getenv(StringUtils.toOSStyleKey(key));
         }
+        // 返回查找到的值
         return value;
     }
 
+    // 获取所有系统环境变量
     public Map<String, String> getProperties() {
+        // 直接返回系统的所有环境变量
         return System.getenv();
     }
 }

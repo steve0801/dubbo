@@ -32,34 +32,42 @@ import static org.apache.dubbo.common.function.Predicates.or;
  *
  * @since 2.7.5
  */
+// 流式操作工具类，提供基于Stream的过滤操作
 public interface Streams {
 
+    // 将Iterable转换为Stream并应用过滤条件
     static <T, S extends Iterable<T>> Stream<T> filterStream(S values, Predicate<T> predicate) {
         return stream(values.spliterator(), false).filter(predicate);
     }
 
+    // 过滤Iterable并返回List结果
     static <T, S extends Iterable<T>> List<T> filterList(S values, Predicate<T> predicate) {
         return filterStream(values, predicate).collect(toList());
     }
 
+    // 过滤Iterable并返回Set结果(保持插入顺序)
     static <T, S extends Iterable<T>> Set<T> filterSet(S values, Predicate<T> predicate) {
-        // new Set with insertion order
+        // 使用LinkedHashSet保持插入顺序
         return filterStream(values, predicate).collect(LinkedHashSet::new, Set::add, Set::addAll);
     }
 
+    // 根据输入类型自动选择返回Set或List
     static <T, S extends Iterable<T>> S filter(S values, Predicate<T> predicate) {
         final boolean isSet = Set.class.isAssignableFrom(values.getClass());
         return (S) (isSet ? filterSet(values, predicate) : filterList(values, predicate));
     }
 
+    // 使用AND逻辑组合多个谓词进行过滤
     static <T, S extends Iterable<T>> S filterAll(S values, Predicate<T>... predicates) {
         return filter(values, and(predicates));
     }
 
+    // 使用OR逻辑组合多个谓词进行过滤
     static <T, S extends Iterable<T>> S filterAny(S values, Predicate<T>... predicates) {
         return filter(values, or(predicates));
     }
 
+    // 查找第一个满足所有谓词条件的元素
     static <T> T filterFirst(Iterable<T> values, Predicate<T>... predicates) {
         return stream(values.spliterator(), false)
                 .filter(and(predicates))
@@ -67,5 +75,3 @@ public interface Streams {
                 .orElse(null);
     }
 }
-
-

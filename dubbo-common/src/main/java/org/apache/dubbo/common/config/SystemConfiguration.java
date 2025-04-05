@@ -27,11 +27,13 @@ import java.util.Map;
  */
 public class SystemConfiguration implements Configuration {
 
+    // 获取系统属性值
     @Override
     public Object getInternalProperty(String key) {
         return System.getProperty(key);
     }
 
+    // 获取所有系统属性Map
     public Map<String, String> getProperties() {
         return (Map) System.getProperties();
     }

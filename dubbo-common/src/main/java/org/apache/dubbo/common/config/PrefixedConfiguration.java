@@ -20,25 +20,33 @@ import org.apache.dubbo.common.utils.StringUtils;
 
 public class PrefixedConfiguration implements Configuration {
 
+    // 配置项前缀
     private String prefix;
 
+    // 原始配置对象
     private Configuration origin;
 
+    // 构造函数，传入原始配置和前缀
     public PrefixedConfiguration(Configuration origin, String prefix) {
         this.origin = origin;
         this.prefix = prefix;
     }
 
+    // 获取内部属性值（带前缀处理）
     @Override
     public Object getInternalProperty(String key) {
+        // 如果前缀为空，直接获取原始配置值
         if (StringUtils.isBlank(prefix)) {
             return origin.getInternalProperty(key);
         }
 
+        // 尝试获取带前缀的配置值
         Object value = origin.getInternalProperty(prefix + "." + key);
+        // 如果值不为空则返回
         if (!ConfigurationUtils.isEmptyValue(value)) {
             return value;
         }
+        // 否则返回null
         return null;
     }
 

@@ -24,43 +24,58 @@ import java.util.concurrent.CompletableFuture;
 /**
  * initialize and start application instance
  */
+// 应用部署器接口，继承自Deployer接口
 public interface ApplicationDeployer extends Deployer<ApplicationModel> {
 
     /**
-     * Initialize the component
+     * 初始化组件
+     * @throws IllegalStateException 如果初始化失败抛出异常
      */
     void initialize() throws IllegalStateException;
 
     /**
-     * Starts the component.
+     * 启动组件
+     * @return 返回CompletableFuture以便异步处理
+     * @throws IllegalStateException 如果启动失败抛出异常
      */
     CompletableFuture start() throws IllegalStateException;
 
     /**
-     * Stops the component.
+     * 停止组件
+     * @throws IllegalStateException 如果停止失败抛出异常
      */
     void stop() throws IllegalStateException;
 
+    // 准备应用实例
     void prepareApplicationInstance();
 
+    // 销毁组件
     void destroy();
 
     /**
-     * Indicates that the Application is initialized or not.
+     * 检查应用是否已初始化
+     * @return 如果已初始化返回true，否则返回false
      */
     boolean isInitialized();
 
+    // 获取应用模型
     ApplicationModel getApplicationModel();
 
+    // 获取引用缓存
     ReferenceCache getReferenceCache();
 
     /**
-     * Whether start in background, do not await finish
+     * 检查是否在后台启动
+     * @return 如果是后台启动返回true，否则返回false
      */
     boolean isBackground();
 
+    // 检查启动状态
     void checkStarting();
 
+    /**
+     * 检查是否已启动
+     * @param checkerStartFuture 启动检查的Future对象
+     */
     void checkStarted(CompletableFuture checkerStartFuture);
-
 }

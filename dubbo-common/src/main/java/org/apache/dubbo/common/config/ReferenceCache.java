@@ -21,26 +21,35 @@ import org.apache.dubbo.config.ReferenceConfigBase;
 import java.util.List;
 
 public interface ReferenceCache {
+    // 根据ReferenceConfigBase获取缓存引用对象
     @SuppressWarnings("unchecked")
     <T> T get(ReferenceConfigBase<T> referenceConfig);
 
+    // 根据key和类型获取缓存引用对象
     @SuppressWarnings("unchecked")
     <T> T get(String key, Class<T> type);
 
+    // 根据key获取缓存引用对象
     @SuppressWarnings("unchecked")
     <T> T get(String key);
 
+    // 获取指定类型的所有缓存引用对象列表
     @SuppressWarnings("unchecked")
     <T> List<T> getAll(Class<T> type);
 
+    // 获取指定类型的缓存引用对象
     @SuppressWarnings("unchecked")
     <T> T get(Class<T> type);
 
+    // 根据key和类型销毁缓存引用对象
     void destroy(String key, Class<?> type);
 
+    // 销毁指定类型的所有缓存引用对象
     void destroy(Class<?> type);
 
+    // 根据ReferenceConfigBase销毁缓存引用对象
     <T> void destroy(ReferenceConfigBase<T> referenceConfig);
 
+    // 销毁所有缓存引用对象
     void destroyAll();
 }

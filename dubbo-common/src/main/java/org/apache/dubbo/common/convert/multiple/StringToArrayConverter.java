@@ -29,22 +29,28 @@ import static java.lang.reflect.Array.newInstance;
  */
 public class StringToArrayConverter implements StringToMultiValueConverter {
 
+    // 判断是否接受指定的源类型和目标多值类型
     public boolean accept(Class<String> type, Class<?> multiValueType) {
+        // 如果目标类型是数组则返回true
         if (multiValueType != null && multiValueType.isArray()) {
             return true;
         }
         return false;
     }
 
+    // 将字符串数组转换为目标数组类型
     @Override
     public Object convert(String[] segments, int size, Class<?> targetType, Class<?> elementType) {
-
+        // 获取数组元素类型
         Class<?> componentType = targetType.getComponentType();
 
+        // 获取字符串到元素类型的转换器
         Converter converter = Converter.getConverter(String.class, componentType);
 
+        // 创建目标数组实例
         Object array = newInstance(componentType, size);
 
+        // 遍历字符串数组并转换每个元素
         for (int i = 0; i < size; i++) {
             Array.set(array, i, converter.convert(segments[i]));
         }
@@ -52,9 +58,10 @@ public class StringToArrayConverter implements StringToMultiValueConverter {
         return array;
     }
 
-
+    // 获取转换器优先级
     @Override
     public int getPriority() {
+        // 返回最低优先级
         return MIN_PRIORITY;
     }
 }

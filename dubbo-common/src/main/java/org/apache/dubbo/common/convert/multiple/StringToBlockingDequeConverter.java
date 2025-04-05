@@ -26,8 +26,10 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class StringToBlockingDequeConverter extends StringToIterableConverter<BlockingDeque> {
 
+    // 创建指定大小的BlockingDeque实例
     @Override
     protected BlockingDeque createMultiValue(int size, Class<?> multiValueType) {
+        // 返回一个新的LinkedBlockingDeque实例，初始容量为size
         return new LinkedBlockingDeque(size);
     }
 }

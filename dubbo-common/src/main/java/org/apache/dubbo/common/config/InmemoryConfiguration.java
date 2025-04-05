@@ -24,22 +24,27 @@ import java.util.Map;
  */
 public class InmemoryConfiguration implements Configuration {
 
+    // 配置名称标识
     private String name;
 
-    // stores the configuration key-value pairs
+    // 使用LinkedHashMap存储配置项的键值对（保持插入顺序）
     private Map<String, String> store = new LinkedHashMap<>();
 
+    // 无参构造方法
     public InmemoryConfiguration() {
     }
 
+    // 带名称参数的构造方法
     public InmemoryConfiguration(String name) {
         this.name = name;
     }
 
+    // 通过Map初始化配置的构造方法
     public InmemoryConfiguration(Map<String, String> properties) {
         this.setProperties(properties);
     }
 
+    // 实现接口方法：根据key获取内部存储的配置值
     @Override
     public Object getInternalProperty(String key) {
         return store.get(key);
@@ -48,6 +53,7 @@ public class InmemoryConfiguration implements Configuration {
     /**
      * Add one property into the store, the previous value will be replaced if the key exists
      */
+    // 添加单个配置项（如果key已存在则覆盖）
     public void addProperty(String key, String value) {
         store.put(key, value);
     }
@@ -55,6 +61,7 @@ public class InmemoryConfiguration implements Configuration {
     /**
      * Add a set of properties into the store
      */
+    // 批量添加配置项（合并到现有存储中）
     public void addProperties(Map<String, String> properties) {
         if (properties != null) {
             this.store.putAll(properties);
@@ -64,12 +71,14 @@ public class InmemoryConfiguration implements Configuration {
     /**
      * set store
      */
+    // 完全替换现有配置存储
     public void setProperties(Map<String, String> properties) {
         if (properties != null) {
             this.store = properties;
         }
     }
 
+    // 获取当前所有配置项的Map视图
     public Map<String, String> getProperties() {
         return store;
     }

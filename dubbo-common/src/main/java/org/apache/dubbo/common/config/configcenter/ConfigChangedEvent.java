@@ -26,19 +26,26 @@ import java.util.Objects;
  */
 public class ConfigChangedEvent extends EventObject {
 
+    // 配置项的key
     private final String key;
 
+    // 配置项所属的group
     private final String group;
 
+    // 配置项的内容
     private final String content;
 
+    // 配置变更类型
     private final ConfigChangeType changeType;
 
+    // 构造函数，默认变更类型为MODIFIED
     public ConfigChangedEvent(String key, String group, String content) {
         this(key, group, content, ConfigChangeType.MODIFIED);
     }
 
+    // 完整构造函数
     public ConfigChangedEvent(String key, String group, String content, ConfigChangeType changeType) {
+        // 调用父类构造函数，使用key和group组合作为事件源
         super(key + "," + group);
         this.key = key;
         this.group = group;
@@ -46,22 +53,27 @@ public class ConfigChangedEvent extends EventObject {
         this.changeType = changeType;
     }
 
+    // 获取配置项的key
     public String getKey() {
         return key;
     }
 
+    // 获取配置项的group
     public String getGroup() {
         return group;
     }
 
+    // 获取配置项的内容
     public String getContent() {
         return content;
     }
 
+    // 获取配置变更类型
     public ConfigChangeType getChangeType() {
         return changeType;
     }
 
+    // 重写toString方法，输出事件详情
     @Override
     public String toString() {
         return "ConfigChangedEvent{" +
@@ -72,6 +84,7 @@ public class ConfigChangedEvent extends EventObject {
                 "} " + super.toString();
     }
 
+    // 重写equals方法，比较两个事件是否相同
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -87,6 +100,7 @@ public class ConfigChangedEvent extends EventObject {
                 getChangeType() == that.getChangeType();
     }
 
+    // 重写hashCode方法
     @Override
     public int hashCode() {
         return Objects.hash(getKey(), getGroup(), getContent(), getChangeType());

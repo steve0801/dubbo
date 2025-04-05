@@ -19,18 +19,20 @@ package org.apache.dubbo.common.extension;
 /**
  * An injector to provide resources for SPI extension.
  */
+// 扩展注入器接口，声明为SPI扩展点，作用域为SELF
 @SPI(scope = ExtensionScope.SELF)
 public interface ExtensionInjector extends ExtensionAccessorAware {
 
     /**
-     * Get instance of specify type and name.
-     *
-     * @param type object type.
-     * @param name object name.
-     * @return object instance.
+     * 获取指定类型和名称的实例
+     * @param type 对象类型
+     * @param name 对象名称
+     * @return 对象实例
+     * @param <T> 泛型类型
      */
     <T> T getInstance(Class<T> type, String name);
 
+    // 设置扩展访问器的默认空实现
     @Override
     default void setExtensionAccessor(ExtensionAccessor extensionAccessor) {
     }

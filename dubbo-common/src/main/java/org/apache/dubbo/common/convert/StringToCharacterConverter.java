@@ -25,20 +25,27 @@ import static org.apache.dubbo.common.utils.StringUtils.length;
  */
 public class StringToCharacterConverter implements StringConverter<Character> {
 
+    // 将字符串转换为Character类型
     @Override
     public Character convert(String source) {
+        // 获取字符串长度
         int length = length(source);
+        // 如果字符串为空则返回null
         if (length == 0) {
             return null;
         }
+        // 如果字符串长度大于1则抛出异常
         if (length > 1) {
             throw new IllegalArgumentException("The source String is more than one character!");
         }
+        // 返回字符串的第一个字符
         return source.charAt(0);
     }
 
+    // 获取转换器优先级
     @Override
     public int getPriority() {
+        // 返回普通优先级+8
         return NORMAL_PRIORITY + 8;
     }
 }

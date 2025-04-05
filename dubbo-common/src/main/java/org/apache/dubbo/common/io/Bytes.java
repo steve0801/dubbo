@@ -34,26 +34,33 @@ import java.util.zip.InflaterInputStream;
  * CodecUtils.
  */
 
+// 字节操作工具类，提供各种字节转换和编码解码功能
 public class Bytes {
-    private static final String C64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="; //default base64.
+    // 默认Base64编码字符集
+    private static final String C64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-    private static final char[] BASE16 = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'}, BASE64 = C64.toCharArray();
+    // Base16和Base64编码字符数组
+    private static final char[] BASE16 = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'},
+                              BASE64 = C64.toCharArray();
 
+    // 位掩码常量
     private static final int MASK4 = 0x0f, MASK6 = 0x3f, MASK8 = 0xff;
 
+    // Base64解码表缓存
     private static final Map<Integer, byte[]> DECODE_TABLE_MAP = new ConcurrentHashMap<Integer, byte[]>();
 
+    // 线程本地MD5摘要对象
     private static ThreadLocal<MessageDigest> MD = new ThreadLocal<MessageDigest>();
 
+    // 私有构造函数，防止实例化
     private Bytes() {
     }
 
     /**
-     * byte array copy.
-     *
-     * @param src    src.
-     * @param length new length.
-     * @return new byte array.
+     * 复制字节数组
+     * @param src 源数组
+     * @param length 新数组长度
+     * @return 新字节数组
      */
     public static byte[] copyOf(byte[] src, int length) {
         byte[] dest = new byte[length];
@@ -62,10 +69,9 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @return byte[].
+     * short转字节数组
+     * @param v short值
+     * @return 字节数组
      */
     public static byte[] short2bytes(short v) {
         byte[] ret = {0, 0};
@@ -74,20 +80,19 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @param b byte array.
+     * short转字节数组
+     * @param v short值
+     * @param b 目标字节数组
      */
     public static void short2bytes(short v, byte[] b) {
         short2bytes(v, b, 0);
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @param b byte array.
+     * short转字节数组
+     * @param v short值
+     * @param b 目标字节数组
+     * @param off 起始偏移量
      */
     public static void short2bytes(short v, byte[] b, int off) {
         b[off + 1] = (byte) v;
@@ -95,10 +100,9 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @return byte[].
+     * int转字节数组
+     * @param v int值
+     * @return 字节数组
      */
     public static byte[] int2bytes(int v) {
         byte[] ret = {0, 0, 0, 0};
@@ -107,21 +111,19 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @param b byte array.
+     * int转字节数组
+     * @param v int值
+     * @param b 目标字节数组
      */
     public static void int2bytes(int v, byte[] b) {
         int2bytes(v, b, 0);
     }
 
     /**
-     * to byte array.
-     *
-     * @param v   value.
-     * @param b   byte array.
-     * @param off array offset.
+     * int转字节数组
+     * @param v int值
+     * @param b 目标字节数组
+     * @param off 起始偏移量
      */
     public static void int2bytes(int v, byte[] b, int off) {
         b[off + 3] = (byte) v;
@@ -131,10 +133,9 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @return byte[].
+     * float转字节数组
+     * @param v float值
+     * @return 字节数组
      */
     public static byte[] float2bytes(float v) {
         byte[] ret = {0, 0, 0, 0};
@@ -143,21 +144,19 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @param b byte array.
+     * float转字节数组
+     * @param v float值
+     * @param b 目标字节数组
      */
     public static void float2bytes(float v, byte[] b) {
         float2bytes(v, b, 0);
     }
 
     /**
-     * to byte array.
-     *
-     * @param v   value.
-     * @param b   byte array.
-     * @param off array offset.
+     * float转字节数组
+     * @param v float值
+     * @param b 目标字节数组
+     * @param off 起始偏移量
      */
     public static void float2bytes(float v, byte[] b, int off) {
         int i = Float.floatToIntBits(v);
@@ -168,10 +167,9 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @return byte[].
+     * long转字节数组
+     * @param v long值
+     * @return 字节数组
      */
     public static byte[] long2bytes(long v) {
         byte[] ret = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -180,21 +178,19 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @param b byte array.
+     * long转字节数组
+     * @param v long值
+     * @param b 目标字节数组
      */
     public static void long2bytes(long v, byte[] b) {
         long2bytes(v, b, 0);
     }
 
     /**
-     * to byte array.
-     *
-     * @param v   value.
-     * @param b   byte array.
-     * @param off array offset.
+     * long转字节数组
+     * @param v long值
+     * @param b 目标字节数组
+     * @param off 起始偏移量
      */
     public static void long2bytes(long v, byte[] b, int off) {
         b[off + 7] = (byte) v;
@@ -208,10 +204,9 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @return byte[].
+     * double转字节数组
+     * @param v double值
+     * @return 字节数组
      */
     public static byte[] double2bytes(double v) {
         byte[] ret = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -220,21 +215,19 @@ public class Bytes {
     }
 
     /**
-     * to byte array.
-     *
-     * @param v value.
-     * @param b byte array.
+     * double转字节数组
+     * @param v double值
+     * @param b 目标字节数组
      */
     public static void double2bytes(double v, byte[] b) {
         double2bytes(v, b, 0);
     }
 
     /**
-     * to byte array.
-     *
-     * @param v   value.
-     * @param b   byte array.
-     * @param off array offset.
+     * double转字节数组
+     * @param v double值
+     * @param b 目标字节数组
+     * @param off 起始偏移量
      */
     public static void double2bytes(double v, byte[] b, int off) {
         long j = Double.doubleToLongBits(v);
@@ -249,21 +242,19 @@ public class Bytes {
     }
 
     /**
-     * to short.
-     *
-     * @param b byte array.
-     * @return short.
+     * 字节数组转short
+     * @param b 字节数组
+     * @return short值
      */
     public static short bytes2short(byte[] b) {
         return bytes2short(b, 0);
     }
 
     /**
-     * to short.
-     *
-     * @param b   byte array.
-     * @param off offset.
-     * @return short.
+     * 字节数组转short
+     * @param b 字节数组
+     * @param off 起始偏移量
+     * @return short值
      */
     public static short bytes2short(byte[] b, int off) {
         return (short) (((b[off + 1] & 0xFF) << 0) +
@@ -271,21 +262,19 @@ public class Bytes {
     }
 
     /**
-     * to int.
-     *
-     * @param b byte array.
-     * @return int.
+     * 字节数组转int
+     * @param b 字节数组
+     * @return int值
      */
     public static int bytes2int(byte[] b) {
         return bytes2int(b, 0);
     }
 
     /**
-     * to int.
-     *
-     * @param b   byte array.
-     * @param off offset.
-     * @return int.
+     * 字节数组转int
+     * @param b 字节数组
+     * @param off 起始偏移量
+     * @return int值
      */
     public static int bytes2int(byte[] b, int off) {
         return ((b[off + 3] & 0xFF) << 0) +
@@ -295,21 +284,19 @@ public class Bytes {
     }
 
     /**
-     * to int.
-     *
-     * @param b byte array.
-     * @return int.
+     * 字节数组转float
+     * @param b 字节数组
+     * @return float值
      */
     public static float bytes2float(byte[] b) {
         return bytes2float(b, 0);
     }
 
     /**
-     * to int.
-     *
-     * @param b   byte array.
-     * @param off offset.
-     * @return int.
+     * 字节数组转float
+     * @param b 字节数组
+     * @param off 起始偏移量
+     * @return float值
      */
     public static float bytes2float(byte[] b, int off) {
         int i = ((b[off + 3] & 0xFF) << 0) +
@@ -320,21 +307,19 @@ public class Bytes {
     }
 
     /**
-     * to long.
-     *
-     * @param b byte array.
-     * @return long.
+     * 字节数组转long
+     * @param b 字节数组
+     * @return long值
      */
     public static long bytes2long(byte[] b) {
         return bytes2long(b, 0);
     }
 
     /**
-     * to long.
-     *
-     * @param b   byte array.
-     * @param off offset.
-     * @return long.
+     * 字节数组转long
+     * @param b 字节数组
+     * @param off 起始偏移量
+     * @return long值
      */
     public static long bytes2long(byte[] b, int off) {
         return ((b[off + 7] & 0xFFL) << 0) +
@@ -348,21 +333,19 @@ public class Bytes {
     }
 
     /**
-     * to long.
-     *
-     * @param b byte array.
-     * @return double.
+     * 字节数组转double
+     * @param b 字节数组
+     * @return double值
      */
     public static double bytes2double(byte[] b) {
         return bytes2double(b, 0);
     }
 
     /**
-     * to long.
-     *
-     * @param b   byte array.
-     * @param off offset.
-     * @return double.
+     * 字节数组转double
+     * @param b 字节数组
+     * @param off 起始偏移量
+     * @return double值
      */
     public static double bytes2double(byte[] b, int off) {
         long j = ((b[off + 7] & 0xFFL) << 0) +
@@ -377,22 +360,20 @@ public class Bytes {
     }
 
     /**
-     * to hex string.
-     *
-     * @param bs byte array.
-     * @return hex string.
+     * 字节数组转16进制字符串
+     * @param bs 字节数组
+     * @return 16进制字符串
      */
     public static String bytes2hex(byte[] bs) {
         return bytes2hex(bs, 0, bs.length);
     }
 
     /**
-     * to hex string.
-     *
-     * @param bs  byte array.
-     * @param off offset.
-     * @param len length.
-     * @return hex string.
+     * 字节数组转16进制字符串
+     * @param bs 字节数组
+     * @param off 起始偏移量
+     * @param len 长度
+     * @return 16进制字符串
      */
     public static String bytes2hex(byte[] bs, int off, int len) {
         if (off < 0) {
@@ -417,22 +398,20 @@ public class Bytes {
     }
 
     /**
-     * from hex string.
-     *
-     * @param str hex string.
-     * @return byte array.
+     * 16进制字符串转字节数组
+     * @param str 16进制字符串
+     * @return 字节数组
      */
     public static byte[] hex2bytes(String str) {
         return hex2bytes(str, 0, str.length());
     }
 
     /**
-     * from hex string.
-     *
-     * @param str hex string.
-     * @param off offset.
-     * @param len length.
-     * @return byte array.
+     * 16进制字符串转字节数组
+     * @param str 16进制字符串
+     * @param off 起始偏移量
+     * @param len 长度
+     * @return 字节数组
      */
     public static byte[] hex2bytes(final String str, final int off, int len) {
         if ((len & 1) == 1) {
@@ -458,42 +437,40 @@ public class Bytes {
     }
 
     /**
-     * to base64 string.
-     *
-     * @param b byte array.
-     * @return base64 string.
+     * 字节数组转Base64字符串
+     * @param b 字节数组
+     * @return Base64字符串
      */
     public static String bytes2base64(byte[] b) {
         return bytes2base64(b, 0, b.length, BASE64);
     }
 
     /**
-     * to base64 string.
-     *
-     * @param b byte array.
-     * @return base64 string.
+     * 字节数组转Base64字符串
+     * @param b 字节数组
+     * @param offset 起始偏移量
+     * @param length 长度
+     * @return Base64字符串
      */
     public static String bytes2base64(byte[] b, int offset, int length) {
         return bytes2base64(b, offset, length, BASE64);
     }
 
     /**
-     * to base64 string.
-     *
-     * @param b    byte array.
-     * @param code base64 code string(0-63 is base64 char,64 is pad char).
-     * @return base64 string.
+     * 字节数组转Base64字符串
+     * @param b 字节数组
+     * @param code Base64编码字符集
+     * @return Base64字符串
      */
     public static String bytes2base64(byte[] b, String code) {
         return bytes2base64(b, 0, b.length, code);
     }
 
     /**
-     * to base64 string.
-     *
-     * @param b    byte array.
-     * @param code base64 code string(0-63 is base64 char,64 is pad char).
-     * @return base64 string.
+     * 字节数组转Base64字符串
+     * @param b 字节数组
+     * @param code Base64编码字符集
+     * @return Base64字符串
      */
     public static String bytes2base64(byte[] b, int offset, int length, String code) {
         if (code.length() < 64) {
@@ -504,24 +481,22 @@ public class Bytes {
     }
 
     /**
-     * to base64 string.
-     *
-     * @param b    byte array.
-     * @param code base64 code(0-63 is base64 char,64 is pad char).
-     * @return base64 string.
+     * 字节数组转Base64字符串
+     * @param b 字节数组
+     * @param code Base64编码字符数组
+     * @return Base64字符串
      */
     public static String bytes2base64(byte[] b, char[] code) {
         return bytes2base64(b, 0, b.length, code);
     }
 
     /**
-     * to base64 string.
-     *
-     * @param bs   byte array.
-     * @param off  offset.
-     * @param len  length.
-     * @param code base64 code(0-63 is base64 char,64 is pad char).
-     * @return base64 string.
+     * 字节数组转Base64字符串
+     * @param bs 字节数组
+     * @param off 起始偏移量
+     * @param len 长度
+     * @param code Base64编码字符数组
+     * @return Base64字符串
      */
     public static String bytes2base64(final byte[] bs, final int off, final int len, final char[] code) {
         if (off < 0) {
@@ -538,7 +513,7 @@ public class Bytes {
             throw new IllegalArgumentException("Base64 code length < 64.");
         }
 
-        boolean pad = code.length > 64; // has pad char.
+        boolean pad = code.length > 64; // 是否有填充字符
         int num = len / 3, rem = len % 3, r = off, w = 0;
         char[] cs = new char[num * 4 + (rem == 0 ? 0 : pad ? 4 : rem + 1)];
 
@@ -572,46 +547,42 @@ public class Bytes {
     }
 
     /**
-     * from base64 string.
-     *
-     * @param str base64 string.
-     * @return byte array.
+     * Base64字符串转字节数组
+     * @param str Base64字符串
+     * @return 字节数组
      */
     public static byte[] base642bytes(String str) {
         return base642bytes(str, 0, str.length());
     }
 
     /**
-     * from base64 string.
-     *
-     * @param str    base64 string.
-     * @param offset offset.
-     * @param length length.
-     * @return byte array.
+     * Base64字符串转字节数组
+     * @param str Base64字符串
+     * @param offset 起始偏移量
+     * @param length 长度
+     * @return 字节数组
      */
     public static byte[] base642bytes(String str, int offset, int length) {
         return base642bytes(str, offset, length, C64);
     }
 
     /**
-     * from base64 string.
-     *
-     * @param str  base64 string.
-     * @param code base64 code(0-63 is base64 char,64 is pad char).
-     * @return byte array.
+     * Base64字符串转字节数组
+     * @param str Base64字符串
+     * @param code Base64编码字符集
+     * @return 字节数组
      */
     public static byte[] base642bytes(String str, String code) {
         return base642bytes(str, 0, str.length(), code);
     }
 
     /**
-     * from base64 string.
-     *
-     * @param str  base64 string.
-     * @param off  offset.
-     * @param len  length.
-     * @param code base64 code(0-63 is base64 char,64 is pad char).
-     * @return byte array.
+     * Base64字符串转字节数组
+     * @param str Base64字符串
+     * @param off 起始偏移量
+     * @param len 长度
+     * @param code Base64编码字符集
+     * @return 字节数组
      */
     public static byte[] base642bytes(final String str, final int off, final int len, final String code) {
         if (off < 0) {
@@ -685,24 +656,22 @@ public class Bytes {
     }
 
     /**
-     * from base64 string.
-     *
-     * @param str  base64 string.
-     * @param code base64 code(0-63 is base64 char,64 is pad char).
-     * @return byte array.
+     * Base64字符串转字节数组
+     * @param str Base64字符串
+     * @param code Base64编码字符数组
+     * @return 字节数组
      */
     public static byte[] base642bytes(String str, char[] code) {
         return base642bytes(str, 0, str.length(), code);
     }
 
     /**
-     * from base64 string.
-     *
-     * @param str  base64 string.
-     * @param off  offset.
-     * @param len  length.
-     * @param code base64 code(0-63 is base64 char,64 is pad char).
-     * @return byte array.
+     * Base64字符串转字节数组
+     * @param str Base64字符串
+     * @param off 起始偏移量
+     * @param len 长度
+     * @param code Base64编码字符数组
+     * @return 字节数组
      */
     public static byte[] base642bytes(final String str, final int off, final int len, final char[] code) {
         if (off < 0) {
@@ -776,10 +745,9 @@ public class Bytes {
     }
 
     /**
-     * zip.
-     *
-     * @param bytes source.
-     * @return compressed byte array.
+     * 压缩字节数组
+     * @param bytes 源字节数组
+     * @return 压缩后的字节数组
      * @throws IOException
      */
     public static byte[] zip(byte[] bytes) throws IOException {
@@ -795,10 +763,9 @@ public class Bytes {
     }
 
     /**
-     * unzip.
-     *
-     * @param bytes compressed byte array.
-     * @return byte uncompressed array.
+     * 解压缩字节数组
+     * @param bytes 压缩后的字节数组
+     * @return 解压后的字节数组
      * @throws IOException
      */
     public static byte[] unzip(byte[] bytes) throws IOException {
@@ -816,20 +783,18 @@ public class Bytes {
     }
 
     /**
-     * get md5.
-     *
-     * @param str input string.
-     * @return MD5 byte array.
+     * 获取字符串的MD5值
+     * @param str 输入字符串
+     * @return MD5字节数组
      */
     public static byte[] getMD5(String str) {
         return getMD5(str.getBytes());
     }
 
     /**
-     * get md5.
-     *
-     * @param source byte array source.
-     * @return MD5 byte array.
+     * 获取字节数组的MD5值
+     * @param source 源字节数组
+     * @return MD5字节数组
      */
     public static byte[] getMD5(byte[] source) {
         MessageDigest md = getMessageDigest();
@@ -837,10 +802,9 @@ public class Bytes {
     }
 
     /**
-     * get md5.
-     *
-     * @param file file source.
-     * @return MD5 byte array.
+     * 获取文件的MD5值
+     * @param file 文件
+     * @return MD5字节数组
      */
     public static byte[] getMD5(File file) throws IOException {
         InputStream is = new FileInputStream(file);
@@ -852,15 +816,15 @@ public class Bytes {
     }
 
     /**
-     * get md5.
-     *
-     * @param is input stream.
-     * @return MD5 byte array.
+     * 获取输入流的MD5值
+     * @param is 输入流
+     * @return MD5字节数组
      */
     public static byte[] getMD5(InputStream is) throws IOException {
         return getMD5(is, 1024 * 8);
     }
 
+    // 16进制字符转数值
     private static byte hex(char c) {
         if (c <= '9') {
             return (byte) (c - '0');
@@ -874,6 +838,7 @@ public class Bytes {
         throw new IllegalArgumentException("hex string format error [" + c + "].");
     }
 
+    // 查找字符在字符数组中的位置
     private static int indexOf(char[] cs, char c) {
         for (int i = 0, len = cs.length; i < len; i++) {
             if (cs[i] == c) {
@@ -883,6 +848,7 @@ public class Bytes {
         return -1;
     }
 
+    // 生成Base64解码表
     private static byte[] decodeTable(String code) {
         int hash = code.hashCode();
         byte[] ret = DECODE_TABLE_MAP.get(hash);
@@ -890,9 +856,9 @@ public class Bytes {
             if (code.length() < 64) {
                 throw new IllegalArgumentException("Base64 code length < 64.");
             }
-            // create new decode table.
+            // 创建新的解码表
             ret = new byte[128];
-            for (int i = 0; i < 128; i++) // init table.
+            for (int i = 0; i < 128; i++) // 初始化表
             {
                 ret[i] = -1;
             }
@@ -904,6 +870,7 @@ public class Bytes {
         return ret;
     }
 
+    // 从输入流获取MD5值
     private static byte[] getMD5(InputStream is, int bs) throws IOException {
         MessageDigest md = getMessageDigest();
         byte[] buf = new byte[bs];
@@ -921,6 +888,7 @@ public class Bytes {
         return md.digest();
     }
 
+    // 获取线程本地MD5摘要对象
     private static MessageDigest getMessageDigest() {
         MessageDigest ret = MD.get();
         if (ret == null) {
@@ -934,3 +902,4 @@ public class Bytes {
         return ret;
     }
 }
+

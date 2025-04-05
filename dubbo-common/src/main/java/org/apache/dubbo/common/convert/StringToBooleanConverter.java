@@ -26,13 +26,17 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
  */
 public class StringToBooleanConverter implements StringConverter<Boolean> {
 
+    // 将字符串转换为Boolean类型
     @Override
     public Boolean convert(String source) {
+        // 如果字符串不为空则转换，否则返回null
         return isNotEmpty(source) ? valueOf(source) : null;
     }
 
+    // 获取转换器优先级
     @Override
     public int getPriority() {
+        // 返回普通优先级+5
         return NORMAL_PRIORITY + 5;
     }
 }

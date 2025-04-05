@@ -22,10 +22,19 @@ import java.io.InputStream;
 /**
  * Stream utils.
  */
+// 流处理工具类
 public class StreamUtils {
+    // 私有构造方法，防止实例化
     private StreamUtils() {
     }
 
+    /**
+     * 创建限制大小的输入流
+     * @param is 原始输入流
+     * @param limit 限制大小
+     * @return 限制大小的输入流
+     * @throws IOException
+     */
     public static InputStream limitedInputStream(final InputStream is, final int limit) throws IOException {
         return new InputStream() {
             private int mPosition = 0, mMark = 0, mLimit = Math.min(limit, is.available());
@@ -110,6 +119,12 @@ public class StreamUtils {
         };
     }
 
+    /**
+     * 创建支持mark的输入流
+     * @param is 原始输入流
+     * @param markBufferSize 标记缓冲区大小
+     * @return 支持mark的输入流
+     */
     public static InputStream markSupportedInputStream(final InputStream is, final int markBufferSize) {
         if (is.markSupported()) {
             return is;
@@ -157,7 +172,7 @@ public class StreamUtils {
 
                         return read;
                     } else {
-                        // mark buffer is used, exit mark status!
+                        // 标记缓冲区已使用，退出标记状态
                         mInMarked = false;
                         mInReset = false;
                         mPosition = 0;
@@ -168,16 +183,12 @@ public class StreamUtils {
                 }
             }
 
-            /**
-             * NOTE: the <code>readlimit</code> argument for this class
-             *  has no meaning.
-             */
             @Override
             public synchronized void mark(int readlimit) {
                 mInMarked = true;
                 mInReset = false;
 
-                // mark buffer is not empty
+                // 标记缓冲区不为空时处理
                 int count = mCount - mPosition;
                 if (count > 0) {
                     System.arraycopy(mMarkBuffer, mPosition, mMarkBuffer, 0, count);
@@ -219,13 +230,24 @@ public class StreamUtils {
         };
     }
 
+    /**
+     * 创建支持mark的输入流(默认缓冲区大小1024)
+     * @param is 原始输入流
+     * @return 支持mark的输入流
+     */
     public static InputStream markSupportedInputStream(final InputStream is) {
         return markSupportedInputStream(is, 1024);
     }
 
+    /**
+     * 跳过未使用的流数据
+     * @param is 输入流
+     * @throws IOException
+     */
     public static void skipUnusedStream(InputStream is) throws IOException {
         if (is.available() > 0) {
             is.skip(is.available());
         }
     }
 }
+

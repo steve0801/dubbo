@@ -31,17 +31,22 @@ import static org.apache.dubbo.common.function.ThrowableAction.execute;
  *
  * @since 2.7.5
  */
+// 关机钩子回调管理类
 public class ShutdownHookCallbacks {
 
+    // 存储关机回调的列表
     private final List<ShutdownHookCallback> callbacks = new LinkedList<>();
 
+    // 应用模型实例
     private ApplicationModel applicationModel;
 
+    // 构造函数，初始化应用模型并加载回调
     public ShutdownHookCallbacks(ApplicationModel applicationModel) {
         this.applicationModel = applicationModel;
         loadCallbacks();
     }
 
+    // 添加回调方法
     public ShutdownHookCallbacks addCallback(ShutdownHookCallback callback) {
         synchronized (this) {
             this.callbacks.add(callback);
@@ -49,6 +54,7 @@ public class ShutdownHookCallbacks {
         return this;
     }
 
+    // 获取所有回调方法
     public Collection<ShutdownHookCallback> getCallbacks() {
         synchronized (this) {
             sort(this.callbacks);
@@ -56,18 +62,21 @@ public class ShutdownHookCallbacks {
         }
     }
 
+    // 清空所有回调
     public void clear() {
         synchronized (this) {
             callbacks.clear();
         }
     }
 
+    // 加载扩展实现类中的回调
     private void loadCallbacks() {
         ExtensionLoader<ShutdownHookCallback> loader =
                 applicationModel.getExtensionLoader(ShutdownHookCallback.class);
         loader.getSupportedExtensionInstances().forEach(this::addCallback);
     }
 
+    // 执行所有回调
     public void callback() {
         getCallbacks().forEach(callback -> execute(callback::callback));
     }

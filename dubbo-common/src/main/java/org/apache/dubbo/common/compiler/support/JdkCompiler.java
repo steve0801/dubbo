@@ -53,32 +53,43 @@ import java.util.Set;
  */
 public class JdkCompiler extends AbstractCompiler {
 
+    // 系统Java编译器实例
     private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
+    // 诊断信息收集器
     private final DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<JavaFileObject>();
 
+    // 自定义类加载器实现
     private final ClassLoaderImpl classLoader;
 
+    // 自定义Java文件管理器实现
     private final JavaFileManagerImpl javaFileManager;
 
+    // 编译选项列表
     private final List<String> options;
 
+    // 默认Java版本
     private static final String DEFAULT_JAVA_VERSION = "1.8";
 
+    // 构建默认编译选项(指定Java版本)
     private static List<String> buildDefaultOptions(String javaVersion) {
         return Arrays.asList(
                 "-source", javaVersion, "-target", javaVersion
         );
     }
 
+    // 构建默认编译选项(使用默认Java版本)
     private static List<String> buildDefaultOptions() {
         return buildDefaultOptions(DEFAULT_JAVA_VERSION);
     }
 
+    // 带编译选项的构造函数
     public JdkCompiler(List<String> options) {
         this.options = new ArrayList<>(options);
+        // 获取标准文件管理器
         StandardJavaFileManager manager = compiler.getStandardFileManager(diagnosticCollector, null, null);
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        // 处理URLClassLoader的情况
         if (loader instanceof URLClassLoader
                 && (!"sun.misc.Launcher$AppClassLoader".equals(loader.getClass().getName()))) {
             try {
@@ -92,59 +103,75 @@ public class JdkCompiler extends AbstractCompiler {
                 throw new IllegalStateException(e.getMessage(), e);
             }
         }
+        // 使用特权操作创建类加载器
         classLoader = AccessController.doPrivileged(new PrivilegedAction<ClassLoaderImpl>() {
             @Override
             public ClassLoaderImpl run() {
                 return new ClassLoaderImpl(loader);
             }
         });
+        // 创建自定义文件管理器
         javaFileManager = new JavaFileManagerImpl(manager, classLoader);
     }
 
+    // 默认构造函数(使用默认选项)
     public JdkCompiler() {
         this(buildDefaultOptions());
     }
 
+    // 指定Java版本的构造函数
     public JdkCompiler(String javaVersion) {
         this(buildDefaultOptions(javaVersion));
     }
 
+    // 执行编译的核心方法
     @Override
     public Class<?> doCompile(ClassLoader ignored, String name, String sourceCode) throws Throwable {
+        // 解析包名和类名
         int i = name.lastIndexOf('.');
         String packageName = i < 0 ? "" : name.substring(0, i);
         String className = i < 0 ? name : name.substring(i + 1);
+        // 创建Java文件对象
         JavaFileObjectImpl javaFileObject = new JavaFileObjectImpl(className, sourceCode);
+        // 将文件放入文件管理器
         javaFileManager.putFileForInput(StandardLocation.SOURCE_PATH, packageName,
                 className + ClassUtils.JAVA_EXTENSION, javaFileObject);
+        // 执行编译任务
         Boolean result = compiler.getTask(null, javaFileManager, diagnosticCollector, options,
                 null, Collections.singletonList(javaFileObject)).call();
+        // 检查编译结果
         if (result == null || !result) {
             throw new IllegalStateException("Compilation failed. class: " + name + ", diagnostics: " + diagnosticCollector);
         }
+        // 加载编译后的类
         return classLoader.loadClass(name);
     }
 
+    // Java文件对象实现类
     private static final class JavaFileObjectImpl extends SimpleJavaFileObject {
 
         private final CharSequence source;
         private ByteArrayOutputStream bytecode;
 
+        // 构造函数(基于类名和源代码)
         public JavaFileObjectImpl(final String baseName, final CharSequence source) {
             super(ClassUtils.toURI(baseName + ClassUtils.JAVA_EXTENSION), Kind.SOURCE);
             this.source = source;
         }
 
+        // 构造函数(基于名称和类型)
         JavaFileObjectImpl(final String name, final Kind kind) {
             super(ClassUtils.toURI(name), kind);
             source = null;
         }
 
+        // 构造函数(基于URI和类型)
         public JavaFileObjectImpl(URI uri, Kind kind) {
             super(uri, kind);
             source = null;
         }
 
+        // 获取文件内容
         @Override
         public CharSequence getCharContent(final boolean ignoreEncodingErrors) throws UnsupportedOperationException {
             if (source == null) {
@@ -153,32 +180,38 @@ public class JdkCompiler extends AbstractCompiler {
             return source;
         }
 
+        // 打开输入流
         @Override
         public InputStream openInputStream() {
             return new ByteArrayInputStream(getByteCode());
         }
 
+        // 打开输出流
         @Override
         public OutputStream openOutputStream() {
             return bytecode = new ByteArrayOutputStream();
         }
 
+        // 获取字节码
         public byte[] getByteCode() {
             return bytecode.toByteArray();
         }
     }
 
+    // Java文件管理器实现类
     private static final class JavaFileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
 
         private final ClassLoaderImpl classLoader;
 
         private final Map<URI, JavaFileObject> fileObjects = new HashMap<URI, JavaFileObject>();
 
+        // 构造函数
         public JavaFileManagerImpl(JavaFileManager fileManager, ClassLoaderImpl classLoader) {
             super(fileManager);
             this.classLoader = classLoader;
         }
 
+        // 获取输入文件
         @Override
         public FileObject getFileForInput(Location location, String packageName, String relativeName) throws IOException {
             FileObject o = fileObjects.get(uri(location, packageName, relativeName));
@@ -188,14 +221,17 @@ public class JdkCompiler extends AbstractCompiler {
             return super.getFileForInput(location, packageName, relativeName);
         }
 
+        // 添加输入文件
         public void putFileForInput(StandardLocation location, String packageName, String relativeName, JavaFileObject file) {
             fileObjects.put(uri(location, packageName, relativeName), file);
         }
 
+        // 构建URI
         private URI uri(Location location, String packageName, String relativeName) {
             return ClassUtils.toURI(location.getName() + '/' + packageName + '/' + relativeName);
         }
 
+        // 获取输出文件
         @Override
         public JavaFileObject getJavaFileForOutput(Location location, String qualifiedName, Kind kind, FileObject outputFile)
                 throws IOException {
@@ -204,11 +240,13 @@ public class JdkCompiler extends AbstractCompiler {
             return file;
         }
 
+        // 获取类加载器
         @Override
         public ClassLoader getClassLoader(JavaFileManager.Location location) {
             return classLoader;
         }
 
+        // 推断二进制名称
         @Override
         public String inferBinaryName(Location loc, JavaFileObject file) {
             if (file instanceof JavaFileObjectImpl) {
@@ -217,6 +255,7 @@ public class JdkCompiler extends AbstractCompiler {
             return super.inferBinaryName(loc, file);
         }
 
+        // 列出文件对象
         @Override
         public Iterable<JavaFileObject> list(Location location, String packageName, Set<Kind> kinds, boolean recurse)
                 throws IOException {
@@ -226,6 +265,7 @@ public class JdkCompiler extends AbstractCompiler {
 
             ArrayList<JavaFileObject> files = new ArrayList<JavaFileObject>();
 
+            // 处理CLASS_PATH下的类文件
             if (location == StandardLocation.CLASS_PATH && kinds.contains(JavaFileObject.Kind.CLASS)) {
                 for (JavaFileObject file : fileObjects.values()) {
                     if (file.getKind() == Kind.CLASS && file.getName().startsWith(packageName)) {
@@ -235,6 +275,7 @@ public class JdkCompiler extends AbstractCompiler {
 
                 files.addAll(classLoader.files());
             } else if (location == StandardLocation.SOURCE_PATH && kinds.contains(JavaFileObject.Kind.SOURCE)) {
+                // 处理SOURCE_PATH下的源文件
                 for (JavaFileObject file : fileObjects.values()) {
                     if (file.getKind() == Kind.SOURCE && file.getName().startsWith(packageName)) {
                         files.add(file);
@@ -242,6 +283,7 @@ public class JdkCompiler extends AbstractCompiler {
                 }
             }
 
+            // 添加标准结果
             for (JavaFileObject file : result) {
                 files.add(file);
             }
@@ -250,44 +292,56 @@ public class JdkCompiler extends AbstractCompiler {
         }
     }
 
+    // 类加载器实现类
     private static final class ClassLoaderImpl extends ClassLoader {
 
+        // 类名到文件对象的映射
         private final Map<String, JavaFileObject> classes = new HashMap<String, JavaFileObject>();
 
+        // 构造函数
         ClassLoaderImpl(final ClassLoader parentClassLoader) {
             super(parentClassLoader);
         }
 
+        // 获取所有文件对象
         Collection<JavaFileObject> files() {
             return Collections.unmodifiableCollection(classes.values());
         }
 
+        // 查找类实现
         @Override
         protected Class<?> findClass(final String qualifiedClassName) throws ClassNotFoundException {
             JavaFileObject file = classes.get(qualifiedClassName);
             if (file != null) {
+                // 从文件对象加载类
                 byte[] bytes = ((JavaFileObjectImpl) file).getByteCode();
                 return defineClass(qualifiedClassName, bytes, 0, bytes.length);
             }
             try {
+                // 尝试使用ClassUtils加载
                 return org.apache.dubbo.common.utils.ClassUtils.forNameWithCallerClassLoader(qualifiedClassName, getClass());
             } catch (ClassNotFoundException nf) {
+                // 回退到父类实现
                 return super.findClass(qualifiedClassName);
             }
         }
 
+        // 添加类定义
         void add(final String qualifiedClassName, final JavaFileObject javaFile) {
             classes.put(qualifiedClassName, javaFile);
         }
 
+        // 加载类
         @Override
         protected synchronized Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
             return super.loadClass(name, resolve);
         }
 
+        // 获取资源流
         @Override
         public InputStream getResourceAsStream(final String name) {
             if (name.endsWith(ClassUtils.CLASS_EXTENSION)) {
+                // 处理类文件资源
                 String qualifiedClassName = name.substring(0, name.length() - ClassUtils.CLASS_EXTENSION.length()).replace('/', '.');
                 JavaFileObjectImpl file = (JavaFileObjectImpl) classes.get(qualifiedClassName);
                 if (file != null) {
@@ -297,6 +351,4 @@ public class JdkCompiler extends AbstractCompiler {
             return super.getResourceAsStream(name);
         }
     }
-
-
 }

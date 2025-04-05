@@ -26,22 +26,26 @@ import java.util.function.Function;
  * Properties Cache of Configuration {@link ConfigurationUtils#getCachedDynamicProperty(ScopeModel, String, String)}
  */
 public class ConfigurationCache {
+    // 定义一个并发哈希映射作为缓存
     private final Map<String, String> cache = new ConcurrentHashMap<>();
 
     /**
-     * Get Cached Value
+     * 获取缓存值
      *
-     * @param key key
-     * @param function function to produce value, should not return `null`
-     * @return value
+     * @param key 键
+     * @param function 生成值的函数，不应返回 null
+     * @return 值
      */
     public String computeIfAbsent(String key, Function<String, String> function) {
+        // 从缓存中获取值
         String value = cache.get(key);
         if (value == null) {
-            // lock free, tolerate repeat apply, will return previous value
+            // 无锁操作，容忍重复应用，将返回先前的值
             cache.putIfAbsent(key, function.apply(key));
+            // 再次从缓存中获取值
             value = cache.get(key);
         }
+        // 返回最终的值
         return value;
     }
 }
